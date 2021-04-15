@@ -1,10 +1,18 @@
 #TODO
-- search for settler 2 projects/ graphics 
-- 
+- properly split ui/fps and game ticks
+- proper event queue between ui/ game state
+- proper split of ui elements and game state
+- search for settler 2 projects/ graphics
 
-#Goal: 
+#AI Goal: 
+## iteration 1:
+- map contains only forest. buildings: woodcutter, sawmill, barack
+- goal: cut off all wood
+## iteration 2:
 - get as much bread as possible within x minutes OR 
 - get fastest x bread
+## iteration 3:
+- get as much coins as possible
 
 #Gameplay:
 - every building requires 1 settler 

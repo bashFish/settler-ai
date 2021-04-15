@@ -3,8 +3,7 @@ import time
 import numpy as np
 from enum import Enum, auto
 
-
-size_of_board = 600
+size_of_board = 500
 rows = 50
 cols = 50
 DELAY = 500
@@ -26,6 +25,7 @@ class UIState(Enum):
     DrawGameOver = 2
     Waiting = 3
 
+
 class CellState(Enum):
     Empty = auto()
     Mountain = auto()
@@ -34,11 +34,13 @@ class CellState(Enum):
     Stone = auto()
     Building = auto()
 
+
 class ColorMap(Enum):
     Mountain = ORANGE_COLOR
     Water = BLUE_COLOR
     Wood = GREEN_COLOR
     Building = RED_COLOR
+
 
 class KeyboardMap(Enum):
     Start = 's'
@@ -46,7 +48,8 @@ class KeyboardMap(Enum):
     Wood = 't'
     Water = 'w'
     Mountain = 'm'
-    #Field ...
+    # Field ...
+
 
 class BuildingMap(Enum):
     Base = auto()
@@ -61,12 +64,13 @@ class BuildingMap(Enum):
     Mill = auto()
     Baker = auto()
     Barack = auto()
-    #CoalMine = auto()
-    #IronMine = auto()
-    #GoldMine = auto()
-    #Smith = auto()
-    #ToolMaker = auto()
-    #CoinMaker = auto()
+    # CoalMine = auto()
+    # IronMine = auto()
+    # GoldMine = auto()
+    # Smith = auto()
+    # ToolMaker = auto()
+    # CoinMaker = auto()
+
 
 # Goal: for now: get as fast as possible 10, 100, 1000 bread. or: get as much bread as possible, in 10, 100, 1000 game ticks.
 # ressources: 1 ressource distributed per game tick. wood requires 4 game ticks, stone 7 ticks
@@ -90,7 +94,7 @@ class SettlerUi:
         self.window = Tk()
         self.window.title("Settler-UI")
 
-        self.canvas = Canvas(self.window, width=size_of_board, height=size_of_board+20)
+        self.canvas = Canvas(self.window, width=size_of_board, height=size_of_board + 20)
         self.canvas.pack()
 
         self.window.bind("<Key>", self.key_input)
@@ -122,6 +126,12 @@ class SettlerUi:
 
         self.canvas.delete("all")
         self.draw_raster()
+        self.initialize_map()
+
+    # TODO: should be moved into state!
+    def initialize_map(self):
+        middle = (rows / 2, cols / 2)
+        RED_COLOR
 
     def mainloop(self):
         while True:
@@ -199,6 +209,27 @@ class SettlerUi:
 
         return [x, y]
 
+    def mark_cell(self, cell, object):
+        coords = self._cell_to_coordinates(cell)
+        color = 'gray' # object to color
+        symbol = 'h'
+
+        cvs = []
+        cvs.append(self.canvas.create_rectangle(
+            coords, fill=color, outline='gray',
+        ))
+        cvs.append(self.canvas.create_text(
+            coords[0]+col_w/2,
+            coords[1]+row_h/2,
+            font="cmr 9 bold",
+            fill='black',
+            text=symbol,
+        ))
+        return cvs
+
+    def key_to_object(self, key):
+        return key
+
     def update(self):
         if self._last_key_pressed == KeyboardMap.Start:
             self._state = UIState.Running
@@ -206,28 +237,26 @@ class SettlerUi:
 
         if self._new_objects:
             for o in self._new_objects:
-                oc = self.canvas.create_rectangle(
-                    self._cell_to_coordinates(o[0]), fill=Color, outline='gray',
-                )
-                self._objects.append(o + (oc, ))
+                oc = self.mark_cell(o[0], self.key_to_object(o[1]))
+                self._objects.append(o + (oc,))
             self._new_objects = []
 
-        stats_text = "you scored \n"
+        stats_text = repr(self._gamestate)
         self._stats_canvas = self.canvas.create_text(
-            size_of_board/2,
-            size_of_board + 25,
-            font="cmr 15 bold",
+            size_of_board / 2,
+            size_of_board + 12,
+            font="cmr 11 bold",
             fill='black',
             text=stats_text,
         )
 
     def mouse_input(self, event):
-        print("Mouse: %s" %(event))
+        print("Mouse: %s" % (event))
         cell = self._coordinates_to_cell([event.x, event.y])
         if cell:
-            self._new_objects.append((cell,self._last_key_pressed))
+            self._new_objects.append((cell, self._last_key_pressed))
 
     def key_input(self, event):
-        print("Keyboard: %s" %(event))
+        print("Keyboard: %s" % (event))
         if event.keysym in KeyboardMap._value2member_map_:
             self._last_key_pressed = KeyboardMap._value2member_map_[event.keysym]
