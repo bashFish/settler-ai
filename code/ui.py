@@ -83,11 +83,14 @@ class SettlerUi:
     # ------------------------------------------------------------------
     # Initializing Functions/ Loops:
     # ------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, gamestate):
+
+        self._gamestate = gamestate
+
         self.window = Tk()
         self.window.title("Settler-UI")
 
-        self.canvas = Canvas(self.window, width=size_of_board, height=size_of_board)
+        self.canvas = Canvas(self.window, width=size_of_board, height=size_of_board+20)
         self.canvas.pack()
 
         self.window.bind("<Key>", self.key_input)
@@ -115,6 +118,7 @@ class SettlerUi:
         self._state = None
         self._begin_time = time.time()
         self._state = UIState.Waiting
+        self._stats_canvas = None
 
         self.canvas.delete("all")
         self.draw_raster()
@@ -207,6 +211,15 @@ class SettlerUi:
                 )
                 self._objects.append(o + (oc, ))
             self._new_objects = []
+
+        stats_text = "you scored \n"
+        self._stats_canvas = self.canvas.create_text(
+            size_of_board/2,
+            size_of_board + 25,
+            font="cmr 15 bold",
+            fill='black',
+            text=stats_text,
+        )
 
     def mouse_input(self, event):
         print("Mouse: %s" %(event))
