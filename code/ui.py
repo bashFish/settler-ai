@@ -3,6 +3,7 @@ import time
 import numpy as np
 from enum import Enum, auto
 
+
 size_of_board = 500
 rows = 50
 cols = 50
@@ -10,6 +11,9 @@ DELAY = 500
 
 row_h = int(size_of_board / rows)
 col_w = int(size_of_board / cols)
+row_h_2 = row_h/2
+col_w_2 = col_w/2
+
 
 RED_COLOR = "#EE4035"
 BLUE_COLOR = "#0492CF"
@@ -87,9 +91,7 @@ class SettlerUi:
     # ------------------------------------------------------------------
     # Initializing Functions/ Loops:
     # ------------------------------------------------------------------
-    def __init__(self, gamestate):
-
-        self._gamestate = gamestate
+    def __init__(self):
 
         self.window = Tk()
         self.window.title("Settler-UI")
@@ -127,11 +129,6 @@ class SettlerUi:
         self.canvas.delete("all")
         self.draw_raster()
         self.initialize_map()
-
-    # TODO: should be moved into state!
-    def initialize_map(self):
-        middle = (rows / 2, cols / 2)
-        RED_COLOR
 
     def mainloop(self):
         while True:
@@ -219,8 +216,8 @@ class SettlerUi:
             coords, fill=color, outline='gray',
         ))
         cvs.append(self.canvas.create_text(
-            coords[0]+col_w/2,
-            coords[1]+row_h/2,
+            coords[0]+col_w_2,
+            coords[1]+row_h_2,
             font="cmr 9 bold",
             fill='black',
             text=symbol,
