@@ -3,6 +3,7 @@
 - proper event queue between ui/ game state
 - proper split of ui elements and game state
 - search for settler 2 projects/ graphics
+- look into pygame
 
 #AI Goal: 
 ## iteration 1:

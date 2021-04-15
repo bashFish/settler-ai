@@ -86,23 +86,29 @@ class BuildingMap(Enum):
 #     water -> well
 #
 #  well:
+
+
+
 class SettlerUi:
 
     # ------------------------------------------------------------------
     # Initializing Functions/ Loops:
     # ------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, gamestate):
+
+        self._gamestate = gamestate
 
         self.window = Tk()
         self.window.title("Settler-UI")
 
-        self.canvas = Canvas(self.window, width=size_of_board, height=size_of_board + 20)
+        self.canvas = Canvas(self.window, width=size_of_board+200, height=size_of_board)
         self.canvas.pack()
 
         self.window.bind("<Key>", self.key_input)
         self.window.bind("<Button-1>", self.mouse_input)
 
         self.reset()
+        self.enqueue_entire_gamestate()
 
     def draw_raster(self):
         for i in range(rows):
@@ -114,6 +120,11 @@ class SettlerUi:
             self.canvas.create_line(
                 0, i * size_of_board / cols, size_of_board, i * size_of_board / cols, fill='lightgray'
             )
+
+    def enqueue_entire_gamestate(self):
+        occupied = np.where(self._gamestate.landscape_occupation > 0)
+        for x,y in zip(occupied[0], occupied[1]):
+            self.register_new_object((x,y), str(self._gamestate.landscape_occupation[x,y]))
 
     def reset(self):
         self._board = []
@@ -128,7 +139,6 @@ class SettlerUi:
 
         self.canvas.delete("all")
         self.draw_raster()
-        self.initialize_map()
 
     def mainloop(self):
         while True:
@@ -209,15 +219,15 @@ class SettlerUi:
     def mark_cell(self, cell, object):
         coords = self._cell_to_coordinates(cell)
         color = 'gray' # object to color
-        symbol = 'h'
+        symbol = object #'h'
 
         cvs = []
         cvs.append(self.canvas.create_rectangle(
             coords, fill=color, outline='gray',
         ))
         cvs.append(self.canvas.create_text(
-            coords[0]+col_w_2,
-            coords[1]+row_h_2,
+            coords[0] + col_w_2,
+            coords[1] + row_h_2,
             font="cmr 9 bold",
             fill='black',
             text=symbol,
@@ -234,24 +244,33 @@ class SettlerUi:
 
         if self._new_objects:
             for o in self._new_objects:
-                oc = self.mark_cell(o[0], self.key_to_object(o[1]))
+                oc = self.mark_cell(o[0], o[1])
                 self._objects.append(o + (oc,))
             self._new_objects = []
 
-        stats_text = repr(self._gamestate)
+    def update_gamestats_text(self, gamestats):
+        if self._stats_canvas:
+            print(self._stats_canvas)
+            self.canvas.delete(self._stats_canvas)
+            time.sleep(1)
+
         self._stats_canvas = self.canvas.create_text(
-            size_of_board / 2,
-            size_of_board + 12,
-            font="cmr 11 bold",
+            size_of_board + 2,
+            10,
+            font="times 11 bold",
             fill='black',
-            text=stats_text,
+            text=gamestats,
+            anchor=W
         )
+
+    def register_new_object(self, cell, object):
+        self._new_objects.append((cell,  object))
 
     def mouse_input(self, event):
         print("Mouse: %s" % (event))
         cell = self._coordinates_to_cell([event.x, event.y])
         if cell:
-            self._new_objects.append((cell, self._last_key_pressed))
+            self.register_new_object(cell,  self.key_to_object(self._last_key_pressed))
 
     def key_input(self, event):
         print("Keyboard: %s" % (event))

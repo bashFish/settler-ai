@@ -18,19 +18,33 @@ class State:
             self.state_dict = json.load(fp)
 
         self.buildings = []
-        self.landscape_resource = np.array(rows, cols)
-        self.landscape_resource_amount = np.array(rows, cols)
+        self.landscape_occupation = np.zeros((rows, cols), np.int)
+        self.landscape_resource_amount = np.zeros((rows, cols), np.int)
+
+        self.initialize()
 
     # TODO: should be moved into state!
     def initialize(self):
-        middle = (rows / 2, cols / 2)
-        self.buildings.append(middle, 'base')
 
         # place wood
-        for i in range(4):
-            cell = (random.randint(0,rows), random.randint(0,cols))
-            self.landscape_resource[cell[0],cell[1]] = 1 #wood
-            self.landscape_resource_amount[cell[0],cell[1]] = 10
+        for i in range(6):
+            cell = (random.randint(0, rows-1), random.randint(0, cols-1))
+            for j in range(10):
+                x_d = random.randint(0,2)-1
+                y_d = random.randint(0,2)-1
+                cell = tuple(map(sum, zip(cell, (x_d,y_d))))
+                if cell[0] < 0 or cell[1] < 0 or cell[0] >= cols or cell[1] >= rows:
+                    continue
+                self.landscape_occupation[cell[0], cell[1]] = 2
+                self.landscape_resource_amount[cell[0], cell[1]] = 10
+
+        middle = (int(rows / 2), int(cols / 2))
+
+        self.landscape_occupation[(middle[0]-5):(middle[0]+5),(middle[1]-5):(middle[1]+5)] = 0
+        self.landscape_resource_amount[(middle[0]-5):(middle[0]+5),(middle[1]-5):(middle[1]+5)] = 0
+
+        self.buildings.append((middle, 'base'))
+        self.landscape_occupation[middle[0], middle[1]] = 1  # building
 
     @property
     def settler(self):

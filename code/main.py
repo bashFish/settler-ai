@@ -1,6 +1,9 @@
 from ui import SettlerUi
 from state import State
 import json
+import random
+
+random.seed(10)
 
 
 #TODO: static!
@@ -21,13 +24,18 @@ class Game:
     def __init__(self, state, ui):
         self.state = state
         self.ui = ui
+
         #TODO: initialize ui with state/ draw shit
+        self.update_ui_gamestats_text()
+
+    def update_ui_gamestats_text(self):
+        self.ui.update_gamestats_text(repr(self.state))
 
 
 if __name__ == "__main__":
     c = Config()
     s = State()
-    ui = SettlerUi()
+    ui = SettlerUi(s)
     g = Game(s, ui)
     #TODO: make ui slim and passive as possible! other components send events there
     ui.mainloop()
