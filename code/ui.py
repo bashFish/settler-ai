@@ -2,7 +2,15 @@ from tkinter import *
 import time
 import numpy as np
 from enum import Enum, auto
+import json
 
+from events import UiEvent
+
+with open('config/game.json') as fp:
+    gameconf = json.load(fp)
+
+with open('config/colors.json') as fp:
+    colors = json.load(fp)
 
 size_of_board = 500
 rows = 50
@@ -89,7 +97,7 @@ class BuildingMap(Enum):
 
 
 
-class SettlerUi:
+class Ui:
 
     # ------------------------------------------------------------------
     # Initializing Functions/ Loops:
@@ -148,15 +156,18 @@ class SettlerUi:
         while True:
             self.window.update()
             self.update()
-            print("state %s" % (self._state))
 
             if self._state == UIState.Running:
-                time.sleep(.5)
+                pass
+                #time.sleep(.5)
             elif self._state == UIState.DrawGameOver:
                 self.display_gameover()
                 self._state = UIState.Waiting
             elif self._state == UIState.Waiting:
-                time.sleep(1)
+                pass
+                #time.sleep(1)
+
+            time.sleep(1./gameconf['fps'])
 
     # ------------------------------------------------------------------
     # Drawing Functions:
@@ -242,6 +253,10 @@ class SettlerUi:
         return key
 
     def update(self):
+        for e in self._gamestate.fetch_reset_ui_events():
+            if e == UiEvent.UpdateTick:
+                self.update_ticks_text()
+
         if self._last_key_pressed == KeyboardMap.Start:
             self._state = UIState.Running
             self._last_key_pressed = None
@@ -271,9 +286,9 @@ class SettlerUi:
         if self._ticks_canvas:
             self.canvas.delete(self._ticks_canvas)
 
-        tick = "tick: %i/ %i" % (self._gamestate.latest_state_tick, self._gamestate.tick)
+        tick = "tick: %i/ %i" % (self._gamestate.get_ticks())
 
-        self._stats_canvas = self.canvas.create_text(
+        self._ticks_canvas = self.canvas.create_text(
             size_of_board + 2,
             50,
             font="times 11 bold",
