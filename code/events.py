@@ -2,7 +2,7 @@ from enum import Enum, auto
 
 
 class UiEvent(Enum):
-    UpdateTick = auto()
+    pass
 
 
 class GameEvent(Enum):

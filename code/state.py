@@ -54,7 +54,6 @@ class State(object):
 
     def increment_tick(self):
         self.tick += 1
-        self.add_ui_event(UiEvent.UpdateTick)
 
     # TODO: seems like only proper methods are shareable thru process/manager :/
     def get_ticks(self):

@@ -1,13 +1,11 @@
 import time
 from map import initialize_map
 import json
+from misc import *
 
 
-with open('config/game.json') as fp:
-    gameconf = json.load(fp)
-
-with open('config/buildings.json') as fp:
-    buildings = json.load(fp)
+gameconf = get_gameconf()
+buildings = get_buildings()
 
 
 # fetches events of both ui and state,

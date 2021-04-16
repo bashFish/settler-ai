@@ -2,15 +2,15 @@ from tkinter import *
 import time
 import numpy as np
 from enum import Enum, auto
-import json
+from misc import *
 
 from events import UiEvent
 
-with open('config/game.json') as fp:
-    gameconf = json.load(fp)
 
-with open('config/colors.json') as fp:
-    colors = json.load(fp)
+gameconf = get_gameconf()
+buildings = get_buildings()
+colors = get_colors()
+
 
 size_of_board = 500
 rows = 50
@@ -152,52 +152,6 @@ class Ui:
         self.canvas.delete("all")
         self.draw_raster()
 
-
-    def game_event_update(self):
-        for e in self._gamestate.fetch_reset_ui_events():
-            pass
-            #if e == UiEvent.UpdateTick:  #TODO: maybe this one can be default :S? but nice it works :D
-            #    self.update_ticks_text()
-
-    def ui_event_update(self):
-        if self._last_key_pressed == KeyboardMap.Start:
-            self._state = UIState.Running
-            self._last_key_pressed = None
-
-        if self._new_objects:
-            for o in self._new_objects:
-                oc = self.mark_cell(o[0], o[1])
-                self._objects.append(o + (oc,))
-            self._new_objects = []
-
-
-    def update(self):
-        self.window.update()
-
-        self.update_ticks_text()
-        self.update_gamestats_text() #TODO: this one only at event?
-
-        self.game_event_update()
-        self.ui_event_update()
-
-        # TODO: do i need these states?
-        if self._state == UIState.Running:
-            pass
-        elif self._state == UIState.DrawGameOver:
-            self.display_gameover()
-            self._state = UIState.Waiting
-        elif self._state == UIState.Waiting:
-            pass
-
-    def mainloop(self):
-        while True:
-            start = time.time()
-            self.update()
-            sleep = gameconf['frame_rate'] - (time.time() - start)
-
-            if sleep > 0.:
-                time.sleep(sleep)
-
     # ------------------------------------------------------------------
     # Drawing Functions:
     # ------------------------------------------------------------------
@@ -281,7 +235,6 @@ class Ui:
     def key_to_object(self, key):
         return key
 
-
     def update_gamestats_text(self):
         if self._stats_canvas:
             self.canvas.delete(self._stats_canvas)
@@ -327,3 +280,49 @@ class Ui:
         print("Keyboard: %s" % (event))
         if event.keysym in KeyboardMap._value2member_map_:
             self._last_key_pressed = KeyboardMap._value2member_map_[event.keysym]
+
+
+    def game_event_update(self):
+        for e in self._gamestate.fetch_reset_ui_events():
+            pass
+            #if e == UiEvent.UpdateTick:  #TODO: maybe this one can be default :S? but nice it works :D
+            #    self.update_ticks_text()
+
+    def ui_event_update(self):
+        if self._last_key_pressed == KeyboardMap.Start:
+            self._state = UIState.Running
+            self._last_key_pressed = None
+
+        if self._new_objects:
+            for o in self._new_objects:
+                oc = self.mark_cell(o[0], o[1])
+                self._objects.append(o + (oc,))
+            self._new_objects = []
+
+
+    def update(self):
+        self.window.update()
+
+        self.update_ticks_text()
+        self.update_gamestats_text() #TODO: this one only at event?
+
+        self.game_event_update()
+        self.ui_event_update()
+
+        # TODO: do i need these states?
+        if self._state == UIState.Running:
+            pass
+        elif self._state == UIState.DrawGameOver:
+            self.display_gameover()
+            self._state = UIState.Waiting
+        elif self._state == UIState.Waiting:
+            pass
+
+    def mainloop(self):
+        while True:
+            start = time.time()
+            self.update()
+            sleep = gameconf['frame_rate'] - (time.time() - start)
+
+            if sleep > 0.:
+                time.sleep(sleep)

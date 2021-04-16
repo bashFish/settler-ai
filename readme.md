@@ -5,6 +5,7 @@
 - search for settler 2 projects/ graphics
 - look into pygame
 - TODO's in code
+- crash of game/ui should also stop the other
 
 # AI Goal: 
 ## iteration 1:
