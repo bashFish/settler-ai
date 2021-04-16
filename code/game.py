@@ -16,6 +16,9 @@ class Game:
     def __init__(self, state):
         self.state = state
 
+    def update(self):
+        self.state.increment_tick()
+
     def mainloop(self):
 
         #TODO: geht das wirklich nicht besser? kommt mir sehr ineffizient vor,
@@ -25,8 +28,9 @@ class Game:
         self.state.set_landscape_resource_amount_complete(ls_ra)
 
         while True:
-            print("Game Iteration")
-            self.state.increment_tick()
+            start = time.time()
+            self.update()
+            sleep = gameconf['tick_rate'] - (time.time() - start)
 
-            #TODO: measure time elapsed/ do this precise
-            time.sleep(1./gameconf['tps'])
+            if sleep > 0.:
+                time.sleep(sleep)

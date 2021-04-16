@@ -1,4 +1,4 @@
 {
-    "fps": 2,
-    "tps": 2
+    "frame_rate": 0.5,
+    "tick_rate": 0.5
 }

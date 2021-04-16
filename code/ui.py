@@ -152,22 +152,46 @@ class Ui:
         self.canvas.delete("all")
         self.draw_raster()
 
+
+    def game_event_update(self):
+        for e in self._gamestate.fetch_reset_ui_events():
+            if e == UiEvent.UpdateTick:
+                self.update_ticks_text()
+
+    def ui_event_update(self):
+        if self._last_key_pressed == KeyboardMap.Start:
+            self._state = UIState.Running
+            self._last_key_pressed = None
+
+        if self._new_objects:
+            for o in self._new_objects:
+                oc = self.mark_cell(o[0], o[1])
+                self._objects.append(o + (oc,))
+            self._new_objects = []
+
+
+    def update(self):
+        self.window.update()
+        self.game_event_update()
+        self.ui_event_update()
+
+        # TODO: do i need these states?
+        if self._state == UIState.Running:
+            pass
+        elif self._state == UIState.DrawGameOver:
+            self.display_gameover()
+            self._state = UIState.Waiting
+        elif self._state == UIState.Waiting:
+            pass
+
     def mainloop(self):
         while True:
-            self.window.update()
+            start = time.time()
             self.update()
+            sleep = gameconf['frame_rate'] - (time.time() - start)
 
-            if self._state == UIState.Running:
-                pass
-                #time.sleep(.5)
-            elif self._state == UIState.DrawGameOver:
-                self.display_gameover()
-                self._state = UIState.Waiting
-            elif self._state == UIState.Waiting:
-                pass
-                #time.sleep(1)
-
-            time.sleep(1./gameconf['fps'])
+            if sleep > 0.:
+                time.sleep(sleep)
 
     # ------------------------------------------------------------------
     # Drawing Functions:
@@ -252,20 +276,6 @@ class Ui:
     def key_to_object(self, key):
         return key
 
-    def update(self):
-        for e in self._gamestate.fetch_reset_ui_events():
-            if e == UiEvent.UpdateTick:
-                self.update_ticks_text()
-
-        if self._last_key_pressed == KeyboardMap.Start:
-            self._state = UIState.Running
-            self._last_key_pressed = None
-
-        if self._new_objects:
-            for o in self._new_objects:
-                oc = self.mark_cell(o[0], o[1])
-                self._objects.append(o + (oc,))
-            self._new_objects = []
 
     def update_gamestats_text(self):
         if self._stats_canvas:
