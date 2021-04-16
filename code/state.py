@@ -37,11 +37,17 @@ class State(object):
         self._ui_events.append(event)
 
     def fetch_reset_ui_events(self):
+        if not self._ui_events:
+            return []
+
         events = self._ui_events
         self._ui_events = []
         return events
 
     def fetch_reset_game_events(self):
+        if not self._game_events:
+            return []
+
         events = self._game_events
         self._game_events = []
         return events

@@ -155,8 +155,9 @@ class Ui:
 
     def game_event_update(self):
         for e in self._gamestate.fetch_reset_ui_events():
-            if e == UiEvent.UpdateTick:
-                self.update_ticks_text()
+            pass
+            #if e == UiEvent.UpdateTick:  #TODO: maybe this one can be default :S? but nice it works :D
+            #    self.update_ticks_text()
 
     def ui_event_update(self):
         if self._last_key_pressed == KeyboardMap.Start:
@@ -172,6 +173,10 @@ class Ui:
 
     def update(self):
         self.window.update()
+
+        self.update_ticks_text()
+        self.update_gamestats_text() #TODO: this one only at event?
+
         self.game_event_update()
         self.ui_event_update()
 
@@ -281,7 +286,9 @@ class Ui:
         if self._stats_canvas:
             self.canvas.delete(self._stats_canvas)
 
-        gamestats = "settler: %i  wood: %i  plank: %i" % (self._gamestate.settler, self._gamestate.wood, self._gamestate.plank)
+        state_dict = self._gamestate.get_state_dict()
+        #TODO: should rather be accessed thru keys
+        gamestats = "settler: %i  wood: %i  plank: %i" % (state_dict['settler'], state_dict['wood'], state_dict['plank'])
 
         self._stats_canvas = self.canvas.create_text(
             size_of_board + 2,
