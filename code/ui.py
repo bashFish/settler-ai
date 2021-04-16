@@ -94,6 +94,8 @@ class SettlerUi:
     # ------------------------------------------------------------------
     # Initializing Functions/ Loops:
     # ------------------------------------------------------------------
+    # TODO: in java would only get a very shallow view-interface!
+    #     but there are too many object informations that would need inference
     def __init__(self, gamestate):
 
         self._gamestate = gamestate
@@ -122,9 +124,10 @@ class SettlerUi:
             )
 
     def enqueue_entire_gamestate(self):
-        occupied = np.where(self._gamestate.landscape_occupation > 0)
+        ls_occ = self._gamestate.get_landscape_occupation()
+        occupied = np.where(ls_occ > 0)
         for x,y in zip(occupied[0], occupied[1]):
-            self.register_new_object((x,y), str(self._gamestate.landscape_occupation[x,y]))
+            self.register_new_object((x, y), str(ls_occ[x, y]))
 
     def reset(self):
         self._board = []
@@ -136,6 +139,7 @@ class SettlerUi:
         self._begin_time = time.time()
         self._state = UIState.Waiting
         self._stats_canvas = None
+        self._ticks_canvas = None
 
         self.canvas.delete("all")
         self.draw_raster()
@@ -248,11 +252,11 @@ class SettlerUi:
                 self._objects.append(o + (oc,))
             self._new_objects = []
 
-    def update_gamestats_text(self, gamestats):
+    def update_gamestats_text(self):
         if self._stats_canvas:
-            print(self._stats_canvas)
             self.canvas.delete(self._stats_canvas)
-            time.sleep(1)
+
+        gamestats = "settler: %i  wood: %i  plank: %i" % (self._gamestate.settler, self._gamestate.wood, self._gamestate.plank)
 
         self._stats_canvas = self.canvas.create_text(
             size_of_board + 2,
@@ -260,6 +264,21 @@ class SettlerUi:
             font="times 11 bold",
             fill='black',
             text=gamestats,
+            anchor=W
+        )
+
+    def update_ticks_text(self):
+        if self._ticks_canvas:
+            self.canvas.delete(self._ticks_canvas)
+
+        tick = "tick: %i/ %i" % (self._gamestate.latest_state_tick, self._gamestate.tick)
+
+        self._stats_canvas = self.canvas.create_text(
+            size_of_board + 2,
+            50,
+            font="times 11 bold",
+            fill='black',
+            text=tick,
             anchor=W
         )
 

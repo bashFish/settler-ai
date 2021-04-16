@@ -1,11 +1,12 @@
-#TODO
-- properly split ui/fps and game ticks
+# TODO
+- properly split ui/fps and game ticks/loop
 - proper event queue between ui/ game state
 - proper split of ui elements and game state
 - search for settler 2 projects/ graphics
 - look into pygame
+- TODO's in code
 
-#AI Goal: 
+# AI Goal: 
 ## iteration 1:
 - map contains only forest. buildings: woodcutter, sawmill, barack
 - goal: cut off all wood
@@ -15,7 +16,7 @@
 ## iteration 3:
 - get as much coins as possible
 
-#Gameplay:
+# Gameplay:
 - every building requires 1 settler 
 - every settler requires 1 food / X ticks 
 - every tick, storehouse + base can transport X ressources 
