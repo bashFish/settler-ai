@@ -1,11 +1,12 @@
 # TODO
-- properly split ui/fps and game ticks/loop
-- proper event queue between ui/ game state
-- proper split of ui elements and game state
+- draw ui actions/ current states
+- parse json's, build building classes
+- add game logic
+  
 - search for settler 2 projects/ graphics
 - look into pygame
 - TODO's in code
-- crash of game/ui should also stop the other
+
 
 # AI Goal: 
 ## iteration 1:

@@ -4,8 +4,8 @@ from misc import *
 from events import UiEvent
 
 
-gameconf = get_gameconf()
-buildings = get_buildings()
+gameconf = parse_gameconf()
+buildings, _ = parse_buildings()
 
 
 # fetches events of both ui and state,

@@ -8,9 +8,9 @@ import rasterio.features
 from events import UiEvent
 
 
-gameconf = get_gameconf()
-buildings = get_buildings()
-colors = get_colors()
+gameconf = parse_gameconf()
+buildings, key_to_building = parse_buildings()
+colors = parse_colors()
 
 
 size_of_board = 500
@@ -56,7 +56,7 @@ class ColorMap(Enum):
 
 
 class KeyboardMap(Enum):
-    Start = 's'
+    Start = '1'
     Building = 'b'
     Wood = 't'
     Water = 'w'
@@ -142,14 +142,13 @@ class Ui:
         if self._terrain_canvas:
             self.canvas.delete(self._terrain_canvas)
 
-
         owned_terrain = self._gamestate.get_owned_terrain()
 
         polygon = next(rasterio.features.shapes(owned_terrain))
 
         assert polygon[1] == 1.
         assert len(polygon[0]['coordinates']) == 1
-        poly_coords = [[(pt[0]*row_h,pt[1]*col_w) for pt in polygon[0]['coordinates'][0]]]
+        poly_coords = [[(pt[0]*row_h, pt[1]*col_w) for pt in polygon[0]['coordinates'][0]]]
 
         self._terrain_canvas = self.canvas.create_polygon(poly_coords, fill='', outline='gray', width=2)
 
@@ -165,13 +164,53 @@ class Ui:
         self._stats_canvas = None
         self._ticks_canvas = None
         self._terrain_canvas = None
+        self._key_canvas = []
 
         self.canvas.delete("all")
         self.draw_raster()
+        self.draw_headlines()
+        self.draw_key_binding()
 
     # ------------------------------------------------------------------
     # Drawing Functions:
     # ------------------------------------------------------------------
+    def draw_headlines(self):
+        self.canvas.create_text(
+            size_of_board,
+            90,
+            font="times 12 bold",
+            fill='black',
+            text="keys:",
+            anchor=W
+        )
+
+    def draw_key_binding(self):
+        if self._key_canvas:
+            for c in self._key_canvas:
+                self.canvas.delete(c)
+
+        self._key_canvas.append(self.canvas.create_text(
+            size_of_board,
+            110,
+            font="times 10 bold",
+            fill='black',
+            text="Start: 1",
+            anchor=W
+        ))
+
+        for i, k in enumerate(key_to_building):
+            color = 'black'
+            if k == self._last_key_pressed:
+                color = 'green'
+            self._key_canvas.append(self.canvas.create_text(
+                size_of_board,
+                125+i*15,
+                font="times 10 bold",
+                fill=color,
+                text="%s: %s"%(key_to_building[k], k),
+                anchor=W
+            ))
+
     def display_gameover(self):
         score = 10
         self.canvas.delete("all")
@@ -295,14 +334,17 @@ class Ui:
 
     def key_input(self, event):
         print("Keyboard: %s" % (event))
-        if event.keysym in KeyboardMap._value2member_map_:
-            self._last_key_pressed = KeyboardMap._value2member_map_[event.keysym]
+        if event.keysym in key_to_building:
+            self._last_key_pressed = event.keysym #KeyboardMap._value2member_map_[event.keysym]
+            self._gamestate.add_ui_event(UiEvent.DRAW_KEYS)
 
 
     def game_event_update(self):
         for e in self._gamestate.fetch_reset_ui_events():
             if e == UiEvent.INIT:           #TODO: directly get/call the function name or sth
                 self.enqueue_entire_gamestate()
+            if e == UiEvent.DRAW_KEYS:
+                self.draw_key_binding()
 
 
     def ui_event_update(self):

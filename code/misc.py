@@ -1,18 +1,35 @@
 import json
 
 
-def get_gameconf():
+def parse_gameconf():
     with open('config/game.json') as fp:
         gameconf = json.load(fp)
     return gameconf
 
 #TODO: parse the shit out of it! validate n put it in structures
-def get_buildings():
+def parse_buildings():
+    #TODO: wird ziemlich oft ausgefueht!
     with open('config/buildings.json') as fp:
         buildings = json.load(fp)
-    return buildings
 
-def get_colors():
+    #key to building:
+    key_to_building = {}
+
+    # validate json
+    build_keys = []
+    for key in buildings:
+        cur = buildings[key]
+        assert 'settler' in cur
+
+        if 'key' in cur:
+            build_keys.append(cur['key'])
+            key_to_building[cur['key']] = key
+
+    assert len(build_keys) == len(set(build_keys))
+
+    return buildings, key_to_building
+
+def parse_colors():
     with open('config/colors.json') as fp:
         colors = json.load(fp)
     return colors
