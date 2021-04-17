@@ -1,7 +1,7 @@
 import time
 from map import initialize_map
-import json
 from misc import *
+from events import UiEvent
 
 
 gameconf = get_gameconf()
@@ -21,9 +21,11 @@ class Game:
 
         #TODO: geht das wirklich nicht besser? kommt mir sehr ineffizient vor,
         # wenn die prozesse so mühseelig nen state updaten müssen :/
-        ls_occ, ls_ra = initialize_map(self.state.get_landscape_occupation(), self.state.get_landscape_resource_amount())
+        ls_occ, ls_ra, main_building_position = initialize_map(self.state.get_landscape_occupation(), self.state.get_landscape_resource_amount())
         self.state.set_landscape_occupation_complete(ls_occ)
         self.state.set_landscape_resource_amount_complete(ls_ra)
+        self.state.force_add_building(main_building_position, "Base")
+        self.state.add_ui_event(UiEvent.INIT)
 
         while True:
             start = time.time()

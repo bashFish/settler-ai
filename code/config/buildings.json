@@ -2,7 +2,8 @@
   "Base": {
     "dimension": 4,
     "settler": 50,
-    "carrier": 5
+    "carrier": 5,
+    "borderextend": 7
   },
   "Well": {
     "construction": {
@@ -184,6 +185,7 @@
       "key": "k"
     },
     "dimension": 2,
-    "settler": 1
+    "settler": 1,
+    "borderextend": 7
   }
 }

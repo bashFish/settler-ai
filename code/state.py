@@ -29,6 +29,7 @@ class State(object):
         self.buildings = []
         self.landscape_occupation = np.zeros((rows, cols), np.int)
         self.landscape_resource_amount = np.zeros((rows, cols), np.int)
+        self.owned_terrain = np.zeros((rows, cols), np.int)
 
     def add_game_event(self, event):
         self._game_events.append(event)
@@ -55,6 +56,13 @@ class State(object):
     def increment_tick(self):
         self.tick += 1
 
+    def force_add_building(self, coordinate, building):
+        self.landscape_occupation[coordinate] = '7'
+        self.owned_terrain[(coordinate[0] - 6):(coordinate[0] + 7), (coordinate[1] - 6):(coordinate[1] + 7)] = 1
+
+    def add_building(self, coordinate, building):
+        pass
+
     # TODO: seems like only proper methods are shareable thru process/manager :/
     def get_ticks(self):
         return self.tick, self.latest_state_tick
@@ -68,6 +76,9 @@ class State(object):
 
     def get_landscape_resource_amount(self):
         return self.landscape_resource_amount
+
+    def get_owned_terrain(self):
+        return self.owned_terrain
 
     def set_landscape_occupation(self, coords, state):
         self.landscape_occupation[coords] = state

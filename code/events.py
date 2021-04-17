@@ -2,7 +2,8 @@ from enum import Enum, auto
 
 
 class UiEvent(Enum):
-    pass
+    INIT = auto()
+    DRAW_TERRAIN = auto()
 
 
 class GameEvent(Enum):

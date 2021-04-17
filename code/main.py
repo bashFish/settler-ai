@@ -32,5 +32,5 @@ if __name__ == "__main__":
     up = Process(target=ui_loop, args=(s, ))
     up.start()
 
-    gp.join()
     up.join()
+    # gp.join() if ui crashes, program is exited

@@ -6,6 +6,7 @@ def get_gameconf():
         gameconf = json.load(fp)
     return gameconf
 
+#TODO: parse the shit out of it! validate n put it in structures
 def get_buildings():
     with open('config/buildings.json') as fp:
         buildings = json.load(fp)

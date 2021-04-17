@@ -4,6 +4,7 @@ import numpy as np
 from enum import Enum, auto
 from misc import *
 
+import rasterio.features
 from events import UiEvent
 
 
@@ -118,17 +119,16 @@ class Ui:
         self.window.bind("<Button-1>", self.mouse_input)
 
         self.reset()
-        self.enqueue_entire_gamestate()
 
     def draw_raster(self):
         for i in range(rows):
             self.canvas.create_line(
-                i * size_of_board / rows, 0, i * size_of_board / rows, size_of_board, fill='lightgray'
+                i * row_h, 0, i * row_h, size_of_board, fill='lightgray'
             )
 
         for i in range(cols):
             self.canvas.create_line(
-                0, i * size_of_board / cols, size_of_board, i * size_of_board / cols, fill='lightgray'
+                0, i * col_w, size_of_board, i * col_w, fill='lightgray'
             )
 
     def enqueue_entire_gamestate(self):
@@ -136,6 +136,22 @@ class Ui:
         occupied = np.where(ls_occ > 0)
         for x,y in zip(occupied[0], occupied[1]):
             self.register_new_object((x, y), str(ls_occ[x, y]))
+        self.draw_owned_terrain()
+
+    def draw_owned_terrain(self):
+        if self._terrain_canvas:
+            self.canvas.delete(self._terrain_canvas)
+
+
+        owned_terrain = self._gamestate.get_owned_terrain()
+
+        polygon = next(rasterio.features.shapes(owned_terrain))
+
+        assert polygon[1] == 1.
+        assert len(polygon[0]['coordinates']) == 1
+        poly_coords = [[(pt[0]*row_h,pt[1]*col_w) for pt in polygon[0]['coordinates'][0]]]
+
+        self._terrain_canvas = self.canvas.create_polygon(poly_coords, fill='', outline='gray', width=2)
 
     def reset(self):
         self._board = []
@@ -148,6 +164,7 @@ class Ui:
         self._state = UIState.Waiting
         self._stats_canvas = None
         self._ticks_canvas = None
+        self._terrain_canvas = None
 
         self.canvas.delete("all")
         self.draw_raster()
@@ -284,16 +301,16 @@ class Ui:
 
     def game_event_update(self):
         for e in self._gamestate.fetch_reset_ui_events():
-            pass
-            #if e == UiEvent.UpdateTick:  #TODO: maybe this one can be default :S? but nice it works :D
-            #    self.update_ticks_text()
+            if e == UiEvent.INIT:           #TODO: directly get/call the function name or sth
+                self.enqueue_entire_gamestate()
+
 
     def ui_event_update(self):
         if self._last_key_pressed == KeyboardMap.Start:
             self._state = UIState.Running
             self._last_key_pressed = None
 
-        if self._new_objects:
+        if self._new_objects:    #TODO: is this overkill?
             for o in self._new_objects:
                 oc = self.mark_cell(o[0], o[1])
                 self._objects.append(o + (oc,))

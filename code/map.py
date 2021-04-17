@@ -15,16 +15,16 @@ def initialize_map(landscape_occupation, landscape_resource_amount):
             cell = tuple(map(sum, zip(cell, (x_d, y_d))))
             if cell[0] < 0 or cell[1] < 0 or cell[0] >= cols or cell[1] >= rows:
                 continue
+
+            #TODO: needs to call a function rather
             landscape_occupation[cell[0], cell[1]] = 2
             landscape_resource_amount[cell[0], cell[1]] = 10
 
+    # make space for main building
     middle = (int(rows / 2), int(cols / 2))
 
+    # TODO: needs to call a function rather
     landscape_occupation[(middle[0] - 5):(middle[0] + 5), (middle[1] - 5):(middle[1] + 5)] = 0
     landscape_resource_amount[(middle[0] - 5):(middle[0] + 5), (middle[1] - 5):(middle[1] + 5)] = 0
 
-    # TODO: use method
-    #shared_state.buildings.append((middle, 'base'))
-    landscape_occupation[middle[0], middle[1]] = 1  # building
-
-    return landscape_occupation, landscape_resource_amount
+    return landscape_occupation, landscape_resource_amount, middle
