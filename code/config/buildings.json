@@ -3,7 +3,8 @@
     "dimension": 4,
     "settler": 50,
     "carrier": 5,
-    "borderextend": 7
+    "borderextend": 7,
+    "objectid": 1
   },
   "Forester":{
     "construction": {
@@ -17,7 +18,8 @@
     "settler": 2,
     "production": {
       "ticks": 3
-    }
+    },
+    "objectid": 2
   },
   "Woodcutter":{
     "construction": {
@@ -32,7 +34,8 @@
     "production": {
       "ticks": 3,
       "good": "wood"
-    }
+    },
+    "objectid": 3
   },
   "Sawmill":{
     "construction": {
@@ -49,7 +52,8 @@
       "ticks": 5,
       "good": "plank"
     },
-    "consumes": "wood"
+    "consumes": "wood",
+    "objectid": 4
   },
   "Storehouse": {
     "construction": {
@@ -62,7 +66,8 @@
     "dimension": 2,
     "key":"h",
     "settler": 10,
-    "carrier": 5
+    "carrier": 5,
+    "objectid": 5
   },
   "Barack": {
     "construction": {
@@ -75,6 +80,7 @@
     "dimension": 2,
     "settler": 1,
     "borderextend": 5,
-    "key": "k"
+    "key": "k",
+    "objectid": 6
   }
 }

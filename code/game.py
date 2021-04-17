@@ -4,8 +4,7 @@ from misc import *
 from events import UiEvent, GameEvent
 
 gameconf = parse_gameconf()
-buildings, _ = parse_buildings()
-
+buildings, _, _ = parse_buildings()
 
 # fetches events of both ui and state,
 #   processes and forwards them to the other component
@@ -18,7 +17,8 @@ class Game:
             if e == GameEvent.ADD_BUILDING:
                 cell, building = d
                 print("Building: %s" % (repr(d)))
-                self.state.add_ui_event(UiEvent.ADD_BUILDING, (cell, buildings[building]['key']))
+                self.state.add_building(cell, building)
+                self.state.add_ui_event(UiEvent.ADD_BUILDING, (cell, building))
 
     def update(self):
         self.state.increment_tick()
@@ -31,7 +31,7 @@ class Game:
         ls_occ, ls_ra, main_building_position = initialize_map(self.state.get_landscape_occupation(), self.state.get_landscape_resource_amount())
         self.state.set_landscape_occupation_complete(ls_occ)
         self.state.set_landscape_resource_amount_complete(ls_ra)
-        self.state.force_add_building(main_building_position, "Base")
+        self.state.do_add_building(main_building_position, "Base")
         self.state.add_ui_event(UiEvent.INIT)
 
         while True:

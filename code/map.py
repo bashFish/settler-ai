@@ -17,7 +17,7 @@ def initialize_map(landscape_occupation, landscape_resource_amount):
                 continue
 
             #TODO: needs to call a function rather
-            landscape_occupation[cell[0], cell[1]] = 2
+            landscape_occupation[cell[0], cell[1]] = 9
             landscape_resource_amount[cell[0], cell[1]] = 10
 
     # make space for main building

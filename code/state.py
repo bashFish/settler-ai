@@ -1,7 +1,9 @@
 import json
 import numpy as np
-
+from misc import parse_buildings
 from events import UiEvent
+
+buildings, _, _ = parse_buildings()
 
 rows = 50
 cols = 50
@@ -56,8 +58,12 @@ class State(object):
     def increment_tick(self):
         self.tick += 1
 
-    def force_add_building(self, coordinate, building):
-        self.landscape_occupation[coordinate] = '7'
+    def add_building(self, coordinate, building):
+        if self.landscape_occupation[coordinate] == 0:
+            self.do_add_building(coordinate, building)
+
+    def do_add_building(self, coordinate, building):
+        self.landscape_occupation[coordinate] = buildings[building]['objectid']
         self.owned_terrain[(coordinate[0] - 6):(coordinate[0] + 7), (coordinate[1] - 6):(coordinate[1] + 7)] = 1
 
     def add_building(self, coordinate, building):

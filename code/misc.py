@@ -14,6 +14,7 @@ def parse_buildings():
 
     #key to building:
     key_to_building = {}
+    objectid_to_building = {}
 
     # validate json
     build_keys = []
@@ -24,10 +25,11 @@ def parse_buildings():
         if 'key' in cur:
             build_keys.append(cur['key'])
             key_to_building[cur['key']] = key
+            objectid_to_building[cur['objectid']] = key
 
     assert len(build_keys) == len(set(build_keys))
 
-    return buildings, key_to_building
+    return buildings, key_to_building, objectid_to_building
 
 def parse_colors():
     with open('config/colors.json') as fp:

@@ -9,7 +9,7 @@ from events import UiEvent, GameEvent
 
 
 gameconf = parse_gameconf()
-buildings, key_to_building = parse_buildings()
+buildings, key_to_building, objectid_to_building = parse_buildings()
 colors = parse_colors()
 
 
@@ -135,7 +135,10 @@ class Ui:
         ls_occ = self._state.get_landscape_occupation()
         occupied = np.where(ls_occ > 0)
         for x, y in zip(occupied[0], occupied[1]):
-            self.register_new_object((x, y), str(ls_occ[x, y]))
+            if ls_occ[x, y] in objectid_to_building:
+                self.register_new_object((x, y), buildings[objectid_to_building[ls_occ[x, y]]]['key'])
+            else:
+                self.register_new_object((x, y), str(ls_occ[x, y]))
         self.draw_owned_terrain()
 
     def draw_owned_terrain(self):
@@ -345,9 +348,9 @@ class Ui:
             if e == UiEvent.DRAW_KEYS:
                 self.draw_key_binding()
             if e == UiEvent.ADD_BUILDING:
-                cell, key = d
+                cell, building = d
+                key = buildings[building]['key']
                 self.register_new_object(cell, key)
-
 
 
     def ui_event_update(self):
