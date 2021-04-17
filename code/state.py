@@ -31,11 +31,11 @@ class State(object):
         self.landscape_resource_amount = np.zeros((rows, cols), np.int)
         self.owned_terrain = np.zeros((rows, cols), np.int)
 
-    def add_game_event(self, event):
-        self._game_events.append(event)
+    def add_game_event(self, event, data=None):
+        self._game_events.append((event, data))
 
-    def add_ui_event(self, event):
-        self._ui_events.append(event)
+    def add_ui_event(self, event, data=None):
+        self._ui_events.append((event, data))
 
     def fetch_reset_ui_events(self):
         if not self._ui_events:

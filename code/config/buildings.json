@@ -70,11 +70,11 @@
         "plank": 2,
         "stone": 1
       },
-      "ticks": 4,
-      "key": "k"
+      "ticks": 4
     },
     "dimension": 2,
     "settler": 1,
-    "borderextend": 7
+    "borderextend": 5,
+    "key": "k"
   }
 }

@@ -1,8 +1,7 @@
 import time
 from map import initialize_map
 from misc import *
-from events import UiEvent
-
+from events import UiEvent, GameEvent
 
 gameconf = parse_gameconf()
 buildings, _ = parse_buildings()
@@ -14,8 +13,16 @@ class Game:
     def __init__(self, state):
         self.state = state
 
+    def game_event_update(self):
+        for (e, d) in self.state.fetch_reset_game_events():
+            if e == GameEvent.ADD_BUILDING:
+                cell, building = d
+                print("Building: %s" % (repr(d)))
+                self.state.add_ui_event(UiEvent.ADD_BUILDING, (cell, buildings[building]['key']))
+
     def update(self):
         self.state.increment_tick()
+        self.game_event_update()
 
     def mainloop(self):
 

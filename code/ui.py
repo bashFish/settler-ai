@@ -5,7 +5,7 @@ from enum import Enum, auto
 from misc import *
 
 import rasterio.features
-from events import UiEvent
+from events import UiEvent, GameEvent
 
 
 gameconf = parse_gameconf()
@@ -107,7 +107,7 @@ class Ui:
     #     but there are too many object informations that would need inference
     def __init__(self, gamestate):
 
-        self._gamestate = gamestate
+        self._state = gamestate
 
         self.window = Tk()
         self.window.title("Settler-UI")
@@ -131,10 +131,10 @@ class Ui:
                 0, i * col_w, size_of_board, i * col_w, fill='lightgray'
             )
 
-    def enqueue_entire_gamestate(self):
-        ls_occ = self._gamestate.get_landscape_occupation()
+    def refresh_entire_gamestate(self):
+        ls_occ = self._state.get_landscape_occupation()
         occupied = np.where(ls_occ > 0)
-        for x,y in zip(occupied[0], occupied[1]):
+        for x, y in zip(occupied[0], occupied[1]):
             self.register_new_object((x, y), str(ls_occ[x, y]))
         self.draw_owned_terrain()
 
@@ -142,7 +142,7 @@ class Ui:
         if self._terrain_canvas:
             self.canvas.delete(self._terrain_canvas)
 
-        owned_terrain = self._gamestate.get_owned_terrain()
+        owned_terrain = self._state.get_owned_terrain()
 
         polygon = next(rasterio.features.shapes(owned_terrain))
 
@@ -158,9 +158,8 @@ class Ui:
         self._new_objects = []
         self._last_key_pressed = None
         self._begin_time = None
-        self._state = None
         self._begin_time = time.time()
-        self._state = UIState.Waiting
+        self._ui_state = UIState.Waiting
         self._stats_canvas = None
         self._ticks_canvas = None
         self._terrain_canvas = None
@@ -207,7 +206,7 @@ class Ui:
                 125+i*15,
                 font="times 10 bold",
                 fill=color,
-                text="%s: %s"%(key_to_building[k], k),
+                text="%s: %s" % (key_to_building[k], k),
                 anchor=W
             ))
 
@@ -289,13 +288,13 @@ class Ui:
         return cvs
 
     def key_to_object(self, key):
-        return key
+        return key_to_building[key]
 
     def update_gamestats_text(self):
         if self._stats_canvas:
             self.canvas.delete(self._stats_canvas)
 
-        state_dict = self._gamestate.get_state_dict()
+        state_dict = self._state.get_state_dict()
         #TODO: should rather be accessed thru keys
         gamestats = "settler: %i  wood: %i  plank: %i" % (state_dict['settler'], state_dict['wood'], state_dict['plank'])
 
@@ -312,7 +311,7 @@ class Ui:
         if self._ticks_canvas:
             self.canvas.delete(self._ticks_canvas)
 
-        tick = "tick: %i/ %i" % (self._gamestate.get_ticks())
+        tick = "tick: %i/ %i" % (self._state.get_ticks())
 
         self._ticks_canvas = self.canvas.create_text(
             size_of_board + 2,
@@ -330,26 +329,30 @@ class Ui:
         print("Mouse: %s" % (event))
         cell = self._coordinates_to_cell([event.x, event.y])
         if cell:
-            self.register_new_object(cell,  self.key_to_object(self._last_key_pressed))
+            self._state.add_game_event(GameEvent.ADD_BUILDING, (cell, self.key_to_object(self._last_key_pressed)))
 
     def key_input(self, event):
         print("Keyboard: %s" % (event))
         if event.keysym in key_to_building:
             self._last_key_pressed = event.keysym #KeyboardMap._value2member_map_[event.keysym]
-            self._gamestate.add_ui_event(UiEvent.DRAW_KEYS)
+            self._state.add_ui_event(UiEvent.DRAW_KEYS)
 
 
     def game_event_update(self):
-        for e in self._gamestate.fetch_reset_ui_events():
+        for (e,d) in self._state.fetch_reset_ui_events():
             if e == UiEvent.INIT:           #TODO: directly get/call the function name or sth
-                self.enqueue_entire_gamestate()
+                self.refresh_entire_gamestate()
             if e == UiEvent.DRAW_KEYS:
                 self.draw_key_binding()
+            if e == UiEvent.ADD_BUILDING:
+                cell, key = d
+                self.register_new_object(cell, key)
+
 
 
     def ui_event_update(self):
         if self._last_key_pressed == KeyboardMap.Start:
-            self._state = UIState.Running
+            self._ui_state = UIState.Running
             self._last_key_pressed = None
 
         if self._new_objects:    #TODO: is this overkill?
@@ -369,12 +372,12 @@ class Ui:
         self.ui_event_update()
 
         # TODO: do i need these states?
-        if self._state == UIState.Running:
+        if self._ui_state == UIState.Running:
             pass
-        elif self._state == UIState.DrawGameOver:
+        elif self._ui_state == UIState.DrawGameOver:
             self.display_gameover()
-            self._state = UIState.Waiting
-        elif self._state == UIState.Waiting:
+            self._ui_state = UIState.Waiting
+        elif self._ui_state == UIState.Waiting:
             pass
 
     def mainloop(self):

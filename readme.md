@@ -5,6 +5,7 @@
   
 - search for settler 2 projects/ graphics
 - look into pygame
+- logging
 - TODO's in code
 
 
