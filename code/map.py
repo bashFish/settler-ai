@@ -17,8 +17,8 @@ def initialize_map(landscape_occupation, landscape_resource_amount):
                 continue
 
             #TODO: needs to call a function rather
-            landscape_occupation[cell[0], cell[1]] = 9
-            landscape_resource_amount[cell[0], cell[1]] = 10
+            landscape_occupation[cell[0], cell[1]] = 8
+            landscape_resource_amount[cell[0], cell[1]] = 9
 
     # make space for main building
     middle = (int(rows / 2), int(cols / 2))

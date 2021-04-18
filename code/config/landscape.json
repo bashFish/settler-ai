@@ -1,7 +1,8 @@
 {
     "wood": {
         "symbol": "w",
-        "color": "green"
+        "color": "green",
+        "objectid": 8
     },
     "stone": {
         "symbol": "s",

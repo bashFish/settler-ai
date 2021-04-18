@@ -135,10 +135,8 @@ class Ui:
         ls_occ = self._state.get_landscape_occupation()
         occupied = np.where(ls_occ > 0)
         for x, y in zip(occupied[0], occupied[1]):
-            if ls_occ[x, y] in objectid_to_building:
-                self.register_new_object((x, y), buildings[objectid_to_building[ls_occ[x, y]]]['key'])
-            else:
-                self.register_new_object((x, y), str(ls_occ[x, y]))
+
+            self.register_new_object((x, y), ls_occ[x, y])
         self.draw_owned_terrain()
 
     def draw_owned_terrain(self):
@@ -272,10 +270,19 @@ class Ui:
 
         return (x, y)
 
-    def mark_cell(self, cell, object):
+    #TODO: mark_cell should have objectid
+    def mark_cell(self, cell, objectid):
         coords = self._cell_to_coordinates(cell)
         color = 'gray' # object to color
-        symbol = object #'h'
+        symbol = str(objectid) #'h'
+
+        if symbol in objectid_to_building:
+            symbol = buildings[objectid_to_building[symbol]]['key']
+        if symbol == '1':
+            symbol = 'b'
+        if symbol == '8':
+            symbol = 'w'
+            color = 'green'
 
         cvs = []
         cvs.append(self.canvas.create_rectangle(
@@ -353,6 +360,8 @@ class Ui:
                 symb = buildings[building]['objectid']
                 if 'key' in buildings[building]:
                     symb = buildings[building]['key']
+                elif symb == 7:
+                    symb = 'c'
                 self.register_new_object(cell, symb)
             if e == UiEvent.DRAW_TERRAIN:
                 self.draw_owned_terrain()
