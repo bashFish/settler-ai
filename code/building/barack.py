@@ -36,5 +36,7 @@ class Barack(Building):
                     self.finished = True
                     #TODO: should a building be able to throw an event???
                     state.add_game_event(GameEvent._ADD_BUILDING, (self.coordinate, self.__class__.__name__))
+                if self.constructionMaterial:
+                    self.constructionMaterial.pop(0)
             if self.requiredMaterial and state.carrierAvailable() and state.materialAvailable(self.requiredMaterial[0]):
                 self.constructionMaterial.append(state.acquireMaterial(self.requiredMaterial.pop(0)))
