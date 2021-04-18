@@ -5,15 +5,15 @@ from building.building import Building, BuildingFactory
 from events import GameEvent
 
 
-class BarackFactory(BuildingFactory):
+class SawmillFactory(BuildingFactory):
     def __init__(self, config):
         self._config = config
 
     def instanciate(self, coordinate):
-        return Barack(self._config, coordinate)
+        return Sawmill(self._config, coordinate)
 
 
-class Barack(Building):
+class Sawmill(Building):
     def __init__(self, config, coordinate):
         self.config = config
         self.coordinate = coordinate
@@ -22,14 +22,17 @@ class Barack(Building):
         self.constructionTicks = self.config['construction']['ticks']
         self.requiredMaterial = list(itertools.chain(*[[c]*self.config['construction']['cost'][c] for c in self.config['construction']['cost']]))
         self.constructionMaterial = []
+        self.workMaterial = []
 
     def tick(self, state):
         if self.finished:
-            pass
-            #print("barack is working ... NOT")
+            if self.workMaterial:
+                self.workMaterial.pop(0)
+                state.addMaterial('plank')
+            if len(self.workMaterial) < 3 and state.carrierAvailable() and state.materialAvailable('wood'):
+                self.workMaterial.append(state.acquireMaterial('wood'))
+
         else:
-            #print("barack is constructing ... ")
-            #print(self.requiredMaterial)
             if self.constructionMaterial or not self.requiredMaterial:
                 self.constructionTicks -= 1
                 if self.constructionTicks <= 0:

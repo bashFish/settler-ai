@@ -75,7 +75,11 @@ class State(object):
 
     def acquireMaterial(self, material):
         self.state_dict[material] -= 1
+        # TODO: decrease carrier
         return material
+
+    def addMaterial(self, material):
+        self.state_dict[material] += 1
 
     def construct_building(self, coordinate, building):
         if self.landscape_occupation[coordinate] == 0 and self.owned_terrain[coordinate]:
