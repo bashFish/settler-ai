@@ -270,7 +270,7 @@ class Ui:
         if x >= cols or y >= rows:
             return None
 
-        return [x, y]
+        return (x, y)
 
     def mark_cell(self, cell, object):
         coords = self._cell_to_coordinates(cell)
@@ -351,6 +351,8 @@ class Ui:
                 cell, building = d
                 key = buildings[building]['key']
                 self.register_new_object(cell, key)
+            if e == UiEvent.DRAW_TERRAIN:
+                self.draw_owned_terrain()
 
 
     def ui_event_update(self):

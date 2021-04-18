@@ -1,15 +1,14 @@
-from factory import Factory
-from building import Building
+from building.building import Building, BuildingFactory
 
 
-class BarackFactory(Factory):
+class BarackFactory(BuildingFactory):
     def __init__(self, config):
         self._config = config
 
-    def instanciate(self):
-        return Barack(self._config)
+    def instanciate(self, coordinate):
+        return Barack(self._config, coordinate)
 
 
 class Barack(Building):
-    def __init__(self, config):
+    def __init__(self, config, coordinate):
         pass

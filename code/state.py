@@ -1,5 +1,7 @@
 import json
 import numpy as np
+
+from building.factory import Factory
 from misc import parse_buildings
 from events import UiEvent
 
@@ -28,10 +30,14 @@ class State(object):
         self.tick = 0
         self.latest_state_tick = 0
 
-        self.buildings = []
         self.landscape_occupation = np.zeros((rows, cols), np.int)
         self.landscape_resource_amount = np.zeros((rows, cols), np.int)
         self.owned_terrain = np.zeros((rows, cols), np.int)
+
+        #TODO: are these state or to be moved to game?
+        buildings_conf, _, _ = parse_buildings()
+        self._building_factory = Factory(buildings_conf)
+        self.buildings = []
 
     def add_game_event(self, event, data=None):
         self._game_events.append((event, data))
@@ -59,15 +65,21 @@ class State(object):
         self.tick += 1
 
     def add_building(self, coordinate, building):
-        if self.landscape_occupation[coordinate] == 0:
-            self.do_add_building(coordinate, building)
+        if self.landscape_occupation[coordinate] == 0 and self.owned_terrain[coordinate]:
+            return self.do_add_building(coordinate, building)
+        return None
 
     def do_add_building(self, coordinate, building):
         self.landscape_occupation[coordinate] = buildings[building]['objectid']
-        self.owned_terrain[(coordinate[0] - 6):(coordinate[0] + 7), (coordinate[1] - 6):(coordinate[1] + 7)] = 1
+        self.buildings.append(self._building_factory.create_building(building, coordinate))
 
-    def add_building(self, coordinate, building):
-        pass
+        if 'borderextend' in buildings[building]:
+            extend = buildings[building]['borderextend']
+            #TODO: check coordinates!
+            self.owned_terrain[(coordinate[1] - extend):(coordinate[1] + extend + 1), (coordinate[0] - extend):(coordinate[0] + extend + 1)] = 1
+            return 'extend'
+        return True
+
 
     # TODO: seems like only proper methods are shareable thru process/manager :/
     def get_ticks(self):

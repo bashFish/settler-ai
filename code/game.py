@@ -17,8 +17,11 @@ class Game:
             if e == GameEvent.ADD_BUILDING:
                 cell, building = d
                 print("Building: %s" % (repr(d)))
-                self.state.add_building(cell, building)
-                self.state.add_ui_event(UiEvent.ADD_BUILDING, (cell, building))
+                result = self.state.add_building(cell, building)
+                if result:
+                    self.state.add_ui_event(UiEvent.ADD_BUILDING, (cell, building))
+                if result == 'extend':
+                    self.state.add_ui_event(UiEvent.DRAW_TERRAIN)
 
     def update(self):
         self.state.increment_tick()
