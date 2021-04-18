@@ -9,7 +9,8 @@
 - look into pygame
 - debug/ logging
 - TODO's in code
-
+- delete needs to reduce settlers as well
+- introduce worker class -> delete frees worker
 
 # AI Goal: 
 ## iteration 1:
