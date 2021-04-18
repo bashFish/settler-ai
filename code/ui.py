@@ -299,11 +299,12 @@ class Ui:
 
         state_dict = self._state.get_state_dict()
         #TODO: should rather be accessed thru keys
-        gamestats = "settler: %i  wood: %i  plank: %i" % (state_dict['settler'], state_dict['wood'], state_dict['plank'])
+        gamestats = "settler: %i  wood: %i  plank: %i\n carrier: %i/ free: %i" % (state_dict['settler'], state_dict['wood'], state_dict['plank'],
+                                                                                state_dict['carrier'], state_dict['freeCarrier'])
 
         self._stats_canvas = self.canvas.create_text(
             size_of_board + 2,
-            10,
+            20,
             font="times 11 bold",
             fill='black',
             text=gamestats,

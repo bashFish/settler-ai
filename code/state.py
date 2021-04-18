@@ -1,4 +1,6 @@
 import json
+import random
+
 import numpy as np
 
 from building.factory import Factory
@@ -39,6 +41,7 @@ class State(object):
         self._building_factory = Factory(buildings_conf)
         self.buildings = []
         self.constructing_buildings = []
+        self.availableCarrier = 0
 
     def add_game_event(self, event, data=None):
         self._game_events.append((event, data))
@@ -62,24 +65,31 @@ class State(object):
         self._game_events = []
         return events
 
+    #TODO: should this be in game rather than state?
     def increment_tick(self):
+        self.availableCarrier = self.state_dict['carrier']
         self.tick += 1
-        for b in self.buildings:
+        #TODO: is order important?
+        cur_buildings = self.buildings.copy()
+        random.shuffle(cur_buildings)
+        for b in cur_buildings:
             b.tick(self)
+        self.state_dict['freeCarrier'] = self.availableCarrier
 
     def carrierAvailable(self):
-        return True
+        return self.availableCarrier > 0
 
     def materialAvailable(self, material):
         return self.state_dict[material] > 0
 
     def acquireMaterial(self, material):
         self.state_dict[material] -= 1
-        # TODO: decrease carrier
+        self.availableCarrier -= 1
         return material
 
     def addMaterial(self, material):
         self.state_dict[material] += 1
+        self.availableCarrier -= 1
 
     def construct_building(self, coordinate, building):
         if self.landscape_occupation[coordinate] == 0 and self.owned_terrain[coordinate]:
@@ -91,6 +101,11 @@ class State(object):
         self.landscape_occupation[coordinate] = buildings[building]['objectid']
         #TODO:
         #self.buildings.append(self._building_factory.create_building(building, coordinate))
+
+        if 'settler' in buildings[building]:
+            self.state_dict['settler'] += buildings[building]['settler']
+        if 'carrier' in buildings[building]:
+            self.state_dict['carrier'] += buildings[building]['carrier']
 
         if 'borderextend' in buildings[building]:
             extend = buildings[building]['borderextend']
