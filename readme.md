@@ -1,5 +1,6 @@
 # TODO
 - building config should contain production speed etc.
+- man muss noch iwie nen gewinn kriterium und score festlegen
 - game logging for ai training
 - carrier and worker (cutter) should take longer for longer distances
 - refactor everything (i.p. ui, state & factories)
