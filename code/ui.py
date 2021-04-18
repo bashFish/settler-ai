@@ -151,7 +151,7 @@ class Ui:
 
         assert polygon[1] == 1.
         assert len(polygon[0]['coordinates']) == 1
-        poly_coords = [[(pt[0]*row_h, pt[1]*col_w) for pt in polygon[0]['coordinates'][0]]]
+        poly_coords = [[(pt[1]*row_h, pt[0]*col_w) for pt in polygon[0]['coordinates'][0]]]
 
         self._terrain_canvas = self.canvas.create_polygon(poly_coords, fill='', outline='gray', width=2)
 
@@ -332,7 +332,7 @@ class Ui:
         print("Mouse: %s" % (event))
         cell = self._coordinates_to_cell([event.x, event.y])
         if cell:
-            self._state.add_game_event(GameEvent.ADD_BUILDING, (cell, self.key_to_object(self._last_key_pressed)))
+            self._state.add_game_event(GameEvent.CONSTRUCT_BUILDING, (cell, self.key_to_object(self._last_key_pressed)))
 
     def key_input(self, event):
         print("Keyboard: %s" % (event))
@@ -349,8 +349,10 @@ class Ui:
                 self.draw_key_binding()
             if e == UiEvent.ADD_BUILDING:
                 cell, building = d
-                key = buildings[building]['key']
-                self.register_new_object(cell, key)
+                symb = buildings[building]['objectid']
+                if 'key' in buildings[building]:
+                    symb = buildings[building]['key']
+                self.register_new_object(cell, symb)
             if e == UiEvent.DRAW_TERRAIN:
                 self.draw_owned_terrain()
 

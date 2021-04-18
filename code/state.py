@@ -38,6 +38,7 @@ class State(object):
         buildings_conf, _, _ = parse_buildings()
         self._building_factory = Factory(buildings_conf)
         self.buildings = []
+        self.constructing_buildings = []
 
     def add_game_event(self, event, data=None):
         self._game_events.append((event, data))
@@ -63,20 +64,34 @@ class State(object):
 
     def increment_tick(self):
         self.tick += 1
+        for b in self.buildings:
+            b.tick(self)
 
-    def add_building(self, coordinate, building):
+    def carrierAvailable(self):
+        return True
+
+    def materialAvailable(self, material):
+        return self.state_dict[material] > 0
+
+    def acquireMaterial(self, material):
+        self.state_dict[material] -= 1
+        return material
+
+    def construct_building(self, coordinate, building):
         if self.landscape_occupation[coordinate] == 0 and self.owned_terrain[coordinate]:
-            return self.do_add_building(coordinate, building)
-        return None
+            self.buildings.append(self._building_factory.create_building(building, coordinate))
+            return True
+        return False
 
     def do_add_building(self, coordinate, building):
         self.landscape_occupation[coordinate] = buildings[building]['objectid']
-        self.buildings.append(self._building_factory.create_building(building, coordinate))
+        #TODO:
+        #self.buildings.append(self._building_factory.create_building(building, coordinate))
 
         if 'borderextend' in buildings[building]:
             extend = buildings[building]['borderextend']
             #TODO: check coordinates!
-            self.owned_terrain[(coordinate[1] - extend):(coordinate[1] + extend + 1), (coordinate[0] - extend):(coordinate[0] + extend + 1)] = 1
+            self.owned_terrain[(coordinate[0] - extend):(coordinate[0] + extend + 1), (coordinate[1] - extend):(coordinate[1] + extend + 1)] = 1
             return 'extend'
         return True
 

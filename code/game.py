@@ -14,10 +14,19 @@ class Game:
 
     def game_event_update(self):
         for (e, d) in self.state.fetch_reset_game_events():
-            if e == GameEvent.ADD_BUILDING:
+            if e == GameEvent.CONSTRUCT_BUILDING:
+                #TODO: should be called each tick with do_construct()
                 cell, building = d
                 print("Building: %s" % (repr(d)))
-                result = self.state.add_building(cell, building)
+                result = self.state.construct_building(cell, building)
+                if result:
+                    self.state.add_ui_event(UiEvent.ADD_BUILDING, (cell, "Construction"))
+
+            if e == GameEvent._ADD_BUILDING:
+                #TODO: should be called each tick with tick()
+                cell, building = d
+                print("Building: %s" % (repr(d)))
+                result = self.state.do_add_building(cell, building)
                 if result:
                     self.state.add_ui_event(UiEvent.ADD_BUILDING, (cell, building))
                 if result == 'extend':

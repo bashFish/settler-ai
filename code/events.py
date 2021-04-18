@@ -9,4 +9,5 @@ class UiEvent(Enum):
 
 
 class GameEvent(Enum):
-    ADD_BUILDING = auto()
+    _ADD_BUILDING = auto()
+    CONSTRUCT_BUILDING = auto()

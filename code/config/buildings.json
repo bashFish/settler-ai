@@ -40,8 +40,7 @@
   "Sawmill":{
     "construction": {
       "cost": {
-        "plank": 4,
-        "stone": 3
+        "plank": 4
       },
       "ticks": 6
     },
@@ -58,8 +57,7 @@
   "Storehouse": {
     "construction": {
       "cost": {
-        "plank": 2,
-        "stone": 1
+        "plank": 2
       },
       "ticks": 4
     },
@@ -72,8 +70,7 @@
   "Barack": {
     "construction": {
       "cost": {
-        "plank": 2,
-        "stone": 1
+        "plank": 2
       },
       "ticks": 4
     },
@@ -82,5 +79,9 @@
     "borderextend": 5,
     "key": "k",
     "objectid": 6
+  },
+  "Construction": {
+    "settler": 1,
+    "objectid": 7
   }
 }
