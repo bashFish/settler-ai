@@ -47,7 +47,9 @@ class State(object):
         self._game_events.append((event, data))
 
     def add_ui_event(self, event, data=None):
+        print("before" + str(data))
         self._ui_events.append((event, data))
+        print("after")
 
     def fetch_reset_ui_events(self):
         if not self._ui_events:
@@ -114,6 +116,20 @@ class State(object):
             return 'extend'
         return True
 
+    def reduceArrayToRadius(self, coordinate, radius):
+        return self.landscape_occupation[(coordinate[0]-radius):(coordinate[0]+radius+1),(coordinate[1]-radius):(coordinate[1]+radius+1)], self.landscape_resource_amount[(coordinate[0] - radius):(coordinate[0] + radius + 1), (coordinate[1] - radius):(coordinate[1] + radius + 1)]
+
+    def findReduceRessource(self, ressource, coordinate, radius):
+        ressourceid = 8 # wood
+        occupation, amount = self.reduceArrayToRadius(coordinate, radius)
+        result = np.where(occupation == 8)
+        if not len(result[0]):
+            return False
+        amount[result[0][0],result[1][0]] -= 1
+        if amount[result[0][0],result[1][0]] == 0:
+            occupation[result[0][0],result[1][0]] = 0
+            self.add_ui_event(UiEvent.DELETE_CELL, (coordinate[0]+result[0][0]-radius,coordinate[1]+result[1][0]-radius))
+        return True
 
     # TODO: seems like only proper methods are shareable thru process/manager :/
     def get_ticks(self):

@@ -275,6 +275,7 @@ class Ui:
         coords = self._cell_to_coordinates(cell)
         color = 'gray' # object to color
         symbol = str(objectid) #'h'
+        outline = 'gray'
 
         if symbol in objectid_to_building:
             symbol = buildings[objectid_to_building[symbol]]['key']
@@ -283,10 +284,13 @@ class Ui:
         if symbol == '8':
             symbol = 'w'
             color = 'green'
+        if symbol == '':
+            color = 'white'
+            outline = 'lightgray'
 
         cvs = []
         cvs.append(self.canvas.create_rectangle(
-            coords, fill=color, outline='gray',
+            coords, fill=color, outline=outline,
         ))
         cvs.append(self.canvas.create_text(
             coords[0] + col_w_2,
@@ -350,9 +354,13 @@ class Ui:
 
 
     def game_event_update(self):
+        print("ui event loop")
         for (e,d) in self._state.fetch_reset_ui_events():
             if e == UiEvent.INIT:           #TODO: directly get/call the function name or sth
                 self.refresh_entire_gamestate()
+            if e == UiEvent.DELETE_CELL:
+                print("deleting" + str(d))
+                self.mark_cell(d,'')
             if e == UiEvent.DRAW_KEYS:
                 self.draw_key_binding()
             if e == UiEvent.ADD_BUILDING:

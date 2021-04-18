@@ -6,6 +6,7 @@ class UiEvent(Enum):
     DRAW_TERRAIN = auto()
     DRAW_KEYS = auto()
     ADD_BUILDING = auto()
+    DELETE_CELL = auto()
 
 
 class GameEvent(Enum):
