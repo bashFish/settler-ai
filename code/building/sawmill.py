@@ -23,15 +23,23 @@ class Sawmill(Building):
         self.requiredMaterial = list(itertools.chain(*[[c]*self.config['construction']['cost'][c] for c in self.config['construction']['cost']]))
         self.constructionMaterial = []
         self.workMaterial = []
+        self.doneMaterial = []
+        self.currentMaterialTick = 0
 
     def tick(self, state):
         if self.finished:
-            if self.workMaterial:
-                self.workMaterial.pop(0)
-                state.addMaterial('plank')
+            if self.currentMaterialTick == 0:
+                if self.workMaterial and len(self.doneMaterial) < 2:
+                    self.workMaterial.pop(0)
+                    self.currentMaterialTick = 3
+            else:
+                self.currentMaterialTick -= 1
+                if self.currentMaterialTick == 0:
+                    self.doneMaterial.append('plank')
             if len(self.workMaterial) < 3 and state.carrierAvailable() and state.materialAvailable('wood'):
                 self.workMaterial.append(state.acquireMaterial('wood'))
-
+            if len(self.doneMaterial) and state.carrierAvailable():
+                state.addMaterial(self.doneMaterial.pop(0))
         else:
             if self.constructionMaterial or not self.requiredMaterial:
                 self.constructionTicks -= 1

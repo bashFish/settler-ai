@@ -1,7 +1,7 @@
 {
   "Base": {
     "dimension": 4,
-    "settler": 50,
+    "settler": 10,
     "carrier": 5,
     "borderextend": 7,
     "objectid": 1
