@@ -2,7 +2,7 @@
   "Base": {
     "dimension": 4,
     "settler": 10,
-    "carrier": 5,
+    "carrier": 3,
     "borderextend": 7,
     "objectid": 1
   },
@@ -64,7 +64,7 @@
     "dimension": 2,
     "key":"h",
     "settler": 10,
-    "carrier": 5,
+    "carrier": 2,
     "objectid": 5
   },
   "Barack": {

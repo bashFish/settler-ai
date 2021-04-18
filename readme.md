@@ -1,8 +1,8 @@
 # TODO
-- draw ui actions/ current states
-- parse json's, build building classes
-- add game logic
-  
+- building config should contain production speed etc.
+- game logging for ai training
+- carrier and worker (cutter) should take longer for longer distances
+- refactor everything (i.p. ui, state & factories)
 - search for settler 2 projects/ graphics
 - look into pygame
 - logging
@@ -24,3 +24,11 @@
 - every settler requires 1 food / X ticks 
 - every tick, storehouse + base can transport X ressources 
 - othw: "normal settler" border can be extendes by baracks etc
+
+# Source:
+## game
+contains game code 
+## simulation
+given ai, generates transcriptions of auto-played games
+## training 
+trains ai
