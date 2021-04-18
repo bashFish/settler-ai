@@ -142,8 +142,12 @@ class Ui:
 
         owned_terrain = self._state.get_owned_terrain()
 
-        polygon = next(rasterio.features.shapes(owned_terrain))
+        result = rasterio.features.shapes(owned_terrain)
+        polygon = next(result)
+        if polygon[1] == 0.:
+            polygon = next(result)
 
+        print(polygon)
         assert polygon[1] == 1.
         assert len(polygon[0]['coordinates']) == 1
         poly_coords = [[(pt[1]*row_h, pt[0]*col_w) for pt in polygon[0]['coordinates'][0]]]

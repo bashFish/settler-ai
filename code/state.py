@@ -112,7 +112,9 @@ class State(object):
         if 'borderextend' in buildings[building]:
             extend = buildings[building]['borderextend']
             #TODO: check coordinates!
-            self.owned_terrain[(coordinate[0] - extend):(coordinate[0] + extend + 1), (coordinate[1] - extend):(coordinate[1] + extend + 1)] = 1
+            arr = self.reduceArrayToRadius(self.owned_terrain, coordinate, extend)
+            arr[:,:] = 1
+            #[(coordinate[0] - extend):(coordinate[0] + extend + 1), (coordinate[1] - extend):(coordinate[1] + extend + 1)] = 1
             return 'extend'
         return True
 
@@ -124,15 +126,35 @@ class State(object):
                 del self.buildings[i]
         self.add_ui_event(UiEvent.DELETE_CELL, cell)
 
-    def reduceArrayToRadius(self, coordinate, radius):
-        return self.landscape_occupation[(coordinate[0]-radius):(coordinate[0]+radius+1),(coordinate[1]-radius):(coordinate[1]+radius+1)], self.landscape_resource_amount[(coordinate[0] - radius):(coordinate[0] + radius + 1), (coordinate[1] - radius):(coordinate[1] + radius + 1)]
+    def reduceArrayToRadius(self, array, coordinate, radius):
+        init_x = (coordinate[0]-radius)
+        init_y = (coordinate[1]-radius)
+        if init_x < 0:
+            init_x = 0
+        if init_y < 0:
+            init_y = 0
+        return array[init_x:(coordinate[0]+radius+1),init_y:(coordinate[1]+radius+1)]
 
     def findReduceRessource(self, ressource, coordinate, radius):
+        try_radius = [radius]
+        if coordinate[0]-radius < 0:
+            try_radius.append(coordinate[0])
+        if coordinate[1]-radius < 0:
+            try_radius.append(coordinate[1])
+        if coordinate[0]+radius >= rows:
+            try_radius.append(rows-coordinate[1])
+        if coordinate[1]+radius >= cols:
+            try_radius.append(cols-coordinate[1])
+        for rad in sorted(set(try_radius)):
+            if self.doFindReduceRessource(ressource, coordinate, rad):
+                return True
+        return False
+
+    def doFindReduceRessource(self, ressource, coordinate, radius):
         ressourceid = 8 # wood
-        occupation, amount = self.reduceArrayToRadius(coordinate, radius)
-        print(occupation)
+        occupation = self.reduceArrayToRadius(self.landscape_occupation, coordinate, radius)
+        amount = self.reduceArrayToRadius(self.landscape_resource_amount, coordinate, radius)
         result = np.where(occupation == 8)
-        print(result)
         if not len(result[0]):
             return False
         amount[result[0][0],result[1][0]] -= 1
