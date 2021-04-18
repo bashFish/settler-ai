@@ -57,10 +57,7 @@ class ColorMap(Enum):
 
 class KeyboardMap(Enum):
     Start = '1'
-    Building = 'b'
-    Wood = 't'
-    Water = 'w'
-    Mountain = 'm'
+    DELETE = 'd'
     # Field ...
 
 
@@ -285,7 +282,7 @@ class Ui:
             symbol = 'w'
             color = 'green'
         if symbol == '':
-            color = 'white'
+            color = 'white' #TODO: find proper color that is used :/
             outline = 'lightgray'
 
         cvs = []
@@ -344,11 +341,15 @@ class Ui:
         print("Mouse: %s" % (event))
         cell = self._coordinates_to_cell([event.x, event.y])
         if cell:
-            self._state.add_game_event(GameEvent.CONSTRUCT_BUILDING, (cell, self.key_to_object(self._last_key_pressed)))
+            print(self._last_key_pressed)
+            if self._last_key_pressed == 'd':
+                self._state.add_game_event(GameEvent.DROP, cell)
+            else:
+                self._state.add_game_event(GameEvent.CONSTRUCT_BUILDING, (cell, self.key_to_object(self._last_key_pressed)))
 
     def key_input(self, event):
         print("Keyboard: %s" % (event))
-        if event.keysym in key_to_building:
+        if event.keysym in key_to_building or event.keysym == 'd':
             self._last_key_pressed = event.keysym #KeyboardMap._value2member_map_[event.keysym]
             self._state.add_ui_event(UiEvent.DRAW_KEYS)
 

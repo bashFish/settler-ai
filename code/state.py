@@ -116,19 +116,30 @@ class State(object):
             return 'extend'
         return True
 
+    def delete_at(self, cell):
+        self.landscape_occupation[cell] = 0
+        self.landscape_resource_amount[cell] = 0
+        for i, b in enumerate(self.buildings):
+            if b.coordinate == cell:
+                del self.buildings[i]
+        self.add_ui_event(UiEvent.DELETE_CELL, cell)
+
     def reduceArrayToRadius(self, coordinate, radius):
         return self.landscape_occupation[(coordinate[0]-radius):(coordinate[0]+radius+1),(coordinate[1]-radius):(coordinate[1]+radius+1)], self.landscape_resource_amount[(coordinate[0] - radius):(coordinate[0] + radius + 1), (coordinate[1] - radius):(coordinate[1] + radius + 1)]
 
     def findReduceRessource(self, ressource, coordinate, radius):
         ressourceid = 8 # wood
         occupation, amount = self.reduceArrayToRadius(coordinate, radius)
+        print(occupation)
         result = np.where(occupation == 8)
+        print(result)
         if not len(result[0]):
             return False
         amount[result[0][0],result[1][0]] -= 1
         if amount[result[0][0],result[1][0]] == 0:
             occupation[result[0][0],result[1][0]] = 0
-            self.add_ui_event(UiEvent.DELETE_CELL, (coordinate[0]+result[0][0]-radius,coordinate[1]+result[1][0]-radius))
+            #TODO: its not always radius!
+            self.add_ui_event(UiEvent.DELETE_CELL, (coordinate[0]+result[0][0]-(occupation.shape[0]-1)/2,coordinate[1]+result[1][0]-(occupation.shape[1]-1)/2))
         return True
 
     # TODO: seems like only proper methods are shareable thru process/manager :/

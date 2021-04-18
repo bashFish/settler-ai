@@ -12,3 +12,4 @@ class UiEvent(Enum):
 class GameEvent(Enum):
     _ADD_BUILDING = auto()
     CONSTRUCT_BUILDING = auto()
+    DROP = auto()
