@@ -1,12 +1,13 @@
 # TODO
 - building config should contain production speed etc.
-- man muss noch iwie nen gewinn kriterium und score festlegen
-- game logging for ai training
+- man muss noch iwie nen gewinn kriterium und score festlegen -> fewest ticks/ most ressources left
+- ui/game/state muessen gut getrennt sein, zum ai spiele generien
+- game logging/transcript for ai training
 - carrier and worker (cutter) should take longer for longer distances
 - refactor everything (i.p. ui, state & factories)
 - search for settler 2 projects/ graphics
 - look into pygame
-- logging
+- debug/ logging
 - TODO's in code
 
 
