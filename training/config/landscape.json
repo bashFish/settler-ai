@@ -1,0 +1,14 @@
+{
+    "wood": {
+        "symbol": "w",
+        "color": "green",
+        "objectid": 8
+    },
+    "stone": {
+        "symbol": "s",
+        "color": "gray"
+    },
+    "building": {
+        "color": "orange"
+    }
+}

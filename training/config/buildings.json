@@ -1,0 +1,72 @@
+{
+  "Base": {
+    "dimension": 4,
+    "settler": 10,
+    "carrier": 3,
+    "borderextend": 7,
+    "objectid": 1
+  },
+  "Woodcutter":{
+    "construction": {
+      "cost": {
+        "plank": 2
+      },
+      "ticks": 3
+    },
+    "dimension": 2,
+    "key": "w",
+    "settler": 2,
+    "production": {
+      "ticks": 3,
+      "good": "wood"
+    },
+    "objectid": 3
+  },
+  "Sawmill":{
+    "construction": {
+      "cost": {
+        "plank": 4
+      },
+      "ticks": 6
+    },
+    "dimension": 3,
+    "key": "s",
+    "settler": 4,
+    "production": {
+      "ticks": 5,
+      "good": "plank"
+    },
+    "consumes": "wood",
+    "objectid": 4
+  },
+  "Storehouse": {
+    "construction": {
+      "cost": {
+        "plank": 2
+      },
+      "ticks": 4
+    },
+    "dimension": 2,
+    "key":"h",
+    "settler": 5,
+    "carrier": 2,
+    "objectid": 5
+  },
+  "Barack": {
+    "construction": {
+      "cost": {
+        "plank": 2
+      },
+      "ticks": 4
+    },
+    "dimension": 2,
+    "settler": 1,
+    "borderextend": 5,
+    "key": "k",
+    "objectid": 6
+  },
+  "Construction": {
+    "settler": 1,
+    "objectid": 7
+  }
+}

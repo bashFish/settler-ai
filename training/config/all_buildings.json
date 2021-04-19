@@ -1,0 +1,191 @@
+{
+  "Base": {
+    "dimension": 4,
+    "settler": 50,
+    "carrier": 5,
+    "borderextend": 7
+  },
+  "Well": {
+    "construction": {
+      "cost": {
+        "plank": 2,
+        "stone": 2
+      },
+      "ticks": 4
+    },
+    "dimension": 2,
+    "key": "e",
+    "settler": 2,
+    "production": {
+      "ticks": 3,
+      "good": "water"
+    }
+  },
+  "Stonecutter": {
+    "construction": {
+      "cost": {
+        "plank": 2
+      },
+      "ticks": 3
+    },
+    "dimension": 2,
+    "key": "s",
+    "settler": 2,
+    "production": {
+      "ticks": 3,
+      "good": "stone"
+    }
+  },
+  "Forester":{
+    "construction": {
+      "cost": {
+        "plank": 2
+      },
+      "ticks": 3
+    },
+    "dimension": 2,
+    "key": "r",
+    "settler": 2,
+    "production": {
+      "ticks": 3
+    }
+  },
+  "Woodcutter":{
+    "construction": {
+      "cost": {
+        "plank": 2
+      },
+      "ticks": 3
+    },
+    "dimension": 2,
+    "key": "w",
+    "settler": 2,
+    "production": {
+      "ticks": 3,
+      "good": "wood"
+    }
+  },
+  "Sawmill":{
+    "construction": {
+      "cost": {
+        "plank": 4,
+        "stone": 3
+      },
+      "ticks": 6
+    },
+    "dimension": 3,
+    "key": "s",
+    "settler": 4,
+    "production": {
+      "ticks": 5,
+      "good": "plank"
+    },
+    "consumes": "wood"
+  },
+  "Hunter":{
+    "construction": {
+      "cost": {
+        "plank": 2
+      },
+      "ticks": 3
+    },
+    "dimension": 2,
+    "key": "h",
+    "settler": 2,
+    "production": {
+      "ticks": 3,
+      "good": "meat"
+    }
+  },
+  "Fishery":{
+    "construction": {
+      "cost": {
+        "plank": 2
+      },
+      "ticks": 3
+    },
+    "dimension": 2,
+    "key": "i",
+    "settler": 2,
+    "production": {
+      "ticks": 3,
+      "good": "fish"
+    }
+  },
+  "Farm":{
+    "construction": {
+      "cost": {
+        "plank": 3,
+        "stone": 1
+      },
+      "ticks": 4
+    },
+    "dimension": 3,
+    "key": "f",
+    "settler": 7,
+    "production": {
+      "ticks": 5,
+      "good": "corn"
+    }
+  },
+  "Mill":{
+    "construction": {
+      "cost": {
+        "plank": 3,
+        "stone": 2
+      },
+      "ticks": 5
+    },
+    "dimension": 3,
+    "key": "m",
+    "settler": 5,
+    "production": {
+      "ticks": 4,
+      "good": "flour"
+    },
+    "consumes": "corn"
+  },
+  "Baker":{
+    "construction": {
+      "cost": {
+        "plank": 4,
+        "stone": 3
+      },
+      "ticks": 6
+    },
+    "dimension": 3,
+    "key": "b",
+    "settler": 5,
+    "production": {
+      "ticks": 5,
+      "good": "bread"
+    },
+    "consumes": ["water","flour"]
+  },
+  "Storehouse": {
+    "construction": {
+      "cost": {
+        "plank": 2,
+        "stone": 1
+      },
+      "ticks": 4
+    },
+    "dimension": 2,
+    "key":"h",
+    "settler": 10,
+    "carrier": 5
+  },
+  "Barack": {
+    "construction": {
+      "cost": {
+        "plank": 2,
+        "stone": 1
+      },
+      "ticks": 4,
+      "key": "k"
+    },
+    "dimension": 2,
+    "settler": 1,
+    "borderextend": 7
+  }
+}
