@@ -2,7 +2,7 @@ from multiprocessing.managers import BaseManager
 from multiprocessing import Process
 
 from ui import Ui
-from game import Game
+from control import Control
 from state import State
 import random
 
@@ -11,7 +11,7 @@ random.seed(10)
 
 
 def game_loop(shared_state):
-    g = Game(shared_state)
+    g = Control(shared_state)
     g.mainloop()
 
 

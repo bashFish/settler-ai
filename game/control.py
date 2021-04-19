@@ -8,7 +8,7 @@ buildings, _, _ = parse_buildings()
 
 # fetches events of both ui and state,
 #   processes and forwards them to the other component
-class Game:
+class Control:
     def __init__(self, state):
         self.state = state
         self._RUNNING = True
@@ -41,8 +41,7 @@ class Game:
         self.state.increment_tick()
         self.game_event_update()
 
-    def mainloop(self):
-
+    def initialize_state(self):
         #TODO: geht das wirklich nicht besser? kommt mir sehr ineffizient vor,
         # wenn die prozesse so mühseelig nen state updaten müssen :/
         ls_occ, ls_ra, main_building_position = initialize_map(self.state.get_landscape_occupation(), self.state.get_landscape_resource_amount())
@@ -51,6 +50,9 @@ class Game:
         self.state.do_add_building(main_building_position, "Base")
         self.state.add_ui_event(UiEvent.INIT)
 
+    def mainloop(self):
+        self.initialize_state()
+
         while self._RUNNING:
             start = time.time()
             self.update()
@@ -58,3 +60,10 @@ class Game:
 
             if sleep > 0.:
                 time.sleep(sleep)
+
+    def yieldloop(self):
+        self.initialize_state()
+
+        while self._RUNNING:
+            self.update()
+            yield self._RUNNING

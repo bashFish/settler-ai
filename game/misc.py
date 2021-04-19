@@ -2,6 +2,7 @@ import json
 
 
 def parse_gameconf():
+    #TODO: lookup thru env vars! -> use env or default
     with open('config/game.json') as fp:
         gameconf = json.load(fp)
     return gameconf
