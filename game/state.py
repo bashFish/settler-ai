@@ -121,9 +121,14 @@ class State(object):
     def delete_at(self, cell):
         self.landscape_occupation[cell] = 0
         self.landscape_resource_amount[cell] = 0
-        for i, b in enumerate(self.buildings):
+        for i, b in enumerate(self.buildings): #TODO: make this lookup faster?
             if b.coordinate == cell:
+                if 'settler' in b.config:
+                    self.state_dict['settler'] -= b.config['settler']
+                if 'carrier' in b.config:
+                    self.state_dict['carrier'] -= b.config['carrier']
                 del self.buildings[i]
+        #TODO: should this event be thrown here?
         self.add_ui_event(UiEvent.DELETE_CELL, cell)
 
     def reduceArrayToRadius(self, array, coordinate, radius):
@@ -160,9 +165,12 @@ class State(object):
         amount[result[0][0],result[1][0]] -= 1
         if amount[result[0][0],result[1][0]] == 0:
             occupation[result[0][0],result[1][0]] = 0
-            #TODO: its not always radius!
+            #TODO: should this event be thrown here?
             self.add_ui_event(UiEvent.DELETE_CELL, (coordinate[0]+result[0][0]-(occupation.shape[0]-1)/2,coordinate[1]+result[1][0]-(occupation.shape[1]-1)/2))
         return True
+
+    def get_score(self):
+        return np.sum(self.owned_terrain)*3+self.state_dict['plank']*40+self.state_dict['wood']*20-((self.tick+self.state_dict['settler']*4)>>2)
 
     # TODO: seems like only proper methods are shareable thru process/manager :/
     def get_ticks(self):

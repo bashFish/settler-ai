@@ -11,6 +11,8 @@
 - TODO's in code
 - delete needs to reduce settlers as well
 - introduce worker class -> delete frees worker
+- start/stop
+- delete in keys
 
 # AI Goal: 
 ## iteration 1:
@@ -31,7 +33,16 @@
 # Source:
 ## game
 contains game code 
+
 ## simulation
 given ai, generates transcriptions of auto-played games
+
 ## training 
 trains ai
+
+- need something hierarchical 
+  - -> ai should eg highlevel learn that woodcutter only makes sense near wood
+- compose/ formulate a strategy, then look for moves
+- do a hidden state for own reasoning
+- learn one-time associations : placing a cutter -> gets associated with nearest wood once. 
+- placing storehouse -> all get re-associated with nearest.

@@ -33,10 +33,6 @@ BLUE_COLOR_LIGHT = '#67B0CF'
 RED_COLOR_LIGHT = '#EE7E77'
 
 
-class UIState(Enum):
-    Running = 1
-    DrawGameOver = 2
-    Waiting = 3
 
 
 class CellState(Enum):
@@ -161,9 +157,9 @@ class Ui:
         self._last_key_pressed = None
         self._begin_time = None
         self._begin_time = time.time()
-        self._ui_state = UIState.Waiting
         self._stats_canvas = None
         self._ticks_canvas = None
+        self._score_canvas = None
         self._terrain_canvas = None
         self._key_canvas = []
 
@@ -178,7 +174,7 @@ class Ui:
     def draw_headlines(self):
         self.canvas.create_text(
             size_of_board,
-            90,
+            140,
             font="times 12 bold",
             fill='black',
             text="keys:",
@@ -192,28 +188,31 @@ class Ui:
 
         self._key_canvas.append(self.canvas.create_text(
             size_of_board,
-            110,
+            160,
             font="times 10 bold",
             fill='black',
             text="Start: 1",
             anchor=W
         ))
+        usable_keys = key_to_building.copy()
+        usable_keys['d'] = 'Delete'
+        usable_keys['q'] = 'Quit' #TODO: populate this once, reuse everywhere
 
-        for i, k in enumerate(key_to_building):
+        for i, k in enumerate(usable_keys):
             color = 'black'
             if k == self._last_key_pressed:
                 color = 'green'
             self._key_canvas.append(self.canvas.create_text(
                 size_of_board,
-                125+i*15,
+                175+i*15,
                 font="times 10 bold",
                 fill=color,
-                text="%s: %s" % (key_to_building[k], k),
+                text="%s: %s" % (usable_keys[k], k),
                 anchor=W
             ))
 
     def display_gameover(self):
-        score = 10
+        score = self._state.get_score()
         self.canvas.delete("all")
         score_text = "you scored \n"
         self.canvas.create_text(
@@ -239,7 +238,7 @@ class Ui:
             fill=BLUE_COLOR,
             text=time_spent,
         )
-        score_text = "click to play again \n"
+        score_text = "restart to play again \n"
         self.canvas.create_text(
             size_of_board / 2,
             15 * size_of_board / 16,
@@ -323,15 +322,15 @@ class Ui:
             anchor=W
         )
 
-    def update_ticks_text(self):
+    def update_tick_and_score_text(self):
         if self._ticks_canvas:
             self.canvas.delete(self._ticks_canvas)
 
-        tick = "tick: %i/ %i" % (self._state.get_ticks())
+        tick = "tick: %i/ %i\nscore: %s" % (*self._state.get_ticks(), self._state.get_score())
 
         self._ticks_canvas = self.canvas.create_text(
             size_of_board + 2,
-            50,
+            70,
             font="times 11 bold",
             fill='black',
             text=tick,
@@ -353,7 +352,9 @@ class Ui:
 
     def key_input(self, event):
         print("Keyboard: %s" % (event))
-        if event.keysym in key_to_building or event.keysym == 'd':
+        if event.keysym == 'q':
+            self._state.add_game_event(GameEvent.END_GAME)
+        if event.keysym in key_to_building or event.keysym in ['d']:
             self._last_key_pressed = event.keysym #KeyboardMap._value2member_map_[event.keysym]
             self._state.add_ui_event(UiEvent.DRAW_KEYS)
 
@@ -363,6 +364,8 @@ class Ui:
         for (e,d) in self._state.fetch_reset_ui_events():
             if e == UiEvent.INIT:           #TODO: directly get/call the function name or sth
                 self.refresh_entire_gamestate()
+            if e == UiEvent.DRAW_DASHBOARD:
+                self.display_gameover()
             if e == UiEvent.DELETE_CELL:
                 print("deleting" + str(d))
                 self.mark_cell(d,'')
@@ -381,10 +384,6 @@ class Ui:
 
 
     def ui_event_update(self):
-        if self._last_key_pressed == KeyboardMap.Start:
-            self._ui_state = UIState.Running
-            self._last_key_pressed = None
-
         if self._new_objects:    #TODO: is this overkill?
             for o in self._new_objects:
                 oc = self.mark_cell(o[0], o[1])
@@ -395,20 +394,12 @@ class Ui:
     def update(self):
         self.window.update()
 
-        self.update_ticks_text()
+        self.update_tick_and_score_text()
         self.update_gamestats_text() #TODO: this one only at event?
 
         self.game_event_update()
         self.ui_event_update()
 
-        # TODO: do i need these states?
-        if self._ui_state == UIState.Running:
-            pass
-        elif self._ui_state == UIState.DrawGameOver:
-            self.display_gameover()
-            self._ui_state = UIState.Waiting
-        elif self._ui_state == UIState.Waiting:
-            pass
 
     def mainloop(self):
         while True:

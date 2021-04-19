@@ -6,21 +6,6 @@
     "borderextend": 7,
     "objectid": 1
   },
-  "Forester":{
-    "construction": {
-      "cost": {
-        "plank": 2
-      },
-      "ticks": 3
-    },
-    "dimension": 2,
-    "key": "r",
-    "settler": 2,
-    "production": {
-      "ticks": 3
-    },
-    "objectid": 2
-  },
   "Woodcutter":{
     "construction": {
       "cost": {
@@ -63,7 +48,7 @@
     },
     "dimension": 2,
     "key":"h",
-    "settler": 10,
+    "settler": 5,
     "carrier": 2,
     "objectid": 5
   },

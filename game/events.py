@@ -7,9 +7,11 @@ class UiEvent(Enum):
     DRAW_KEYS = auto()
     ADD_BUILDING = auto()
     DELETE_CELL = auto()
+    DRAW_DASHBOARD = auto()
 
 
 class GameEvent(Enum):
     _ADD_BUILDING = auto()
     CONSTRUCT_BUILDING = auto()
     DROP = auto()
+    END_GAME = auto()

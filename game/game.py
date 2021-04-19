@@ -11,11 +11,15 @@ buildings, _, _ = parse_buildings()
 class Game:
     def __init__(self, state):
         self.state = state
+        self._RUNNING = True
 
     def game_event_update(self):
         for (e, d) in self.state.fetch_reset_game_events():
             if e == GameEvent.DROP:
                 self.state.delete_at(d)
+            if e == GameEvent.END_GAME:
+                self._RUNNING = False
+                self.state.add_ui_event(UiEvent.DRAW_DASHBOARD)
             if e == GameEvent.CONSTRUCT_BUILDING:
                 #TODO: should be called each tick with do_construct()
                 cell, building = d
@@ -47,7 +51,7 @@ class Game:
         self.state.do_add_building(main_building_position, "Base")
         self.state.add_ui_event(UiEvent.INIT)
 
-        while True:
+        while self._RUNNING:
             start = time.time()
             self.update()
             sleep = gameconf['tick_rate'] - (time.time() - start)
