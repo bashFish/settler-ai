@@ -13,6 +13,8 @@
 - introduce worker class -> delete frees worker
 - start/stop
 - delete in keys
+- construction shouldn't be in buildings.json
+- put score to config
 
 # AI Goal: 
 ## iteration 1:

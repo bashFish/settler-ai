@@ -43,6 +43,8 @@ class State(object):
         self.constructing_buildings = []
         self.availableCarrier = 0
 
+        self.settler_score_penalty = 0
+
     def add_game_event(self, event, data=None):
         self._game_events.append((event, data))
 
@@ -71,6 +73,7 @@ class State(object):
     def increment_tick(self):
         self.availableCarrier = self.state_dict['carrier']
         self.tick += 1
+        self.settler_score_penalty += self.state_dict['settler']
         #TODO: is order important?
         cur_buildings = self.buildings.copy()
         random.shuffle(cur_buildings)
@@ -170,7 +173,7 @@ class State(object):
         return True
 
     def get_score(self):
-        return np.sum(self.owned_terrain)*3+self.state_dict['plank']*40+self.state_dict['wood']*20-((self.tick+self.state_dict['settler']*4)>>2)
+        return np.sum(self.owned_terrain)*3+self.state_dict['plank']*40+self.state_dict['wood']*20-(self.settler_score_penalty>>2)
 
     # TODO: seems like only proper methods are shareable thru process/manager :/
     def get_ticks(self):
