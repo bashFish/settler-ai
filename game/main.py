@@ -1,5 +1,6 @@
 from multiprocessing.managers import BaseManager
 from multiprocessing import Process
+import multiprocessing
 
 from ui import Ui
 from control import Control
@@ -21,7 +22,7 @@ def ui_loop(shared_state):
 
 
 if __name__ == "__main__":
-
+    multiprocessing.set_start_method('spawn')
     BaseManager.register('State', State)
     manager = BaseManager()
     manager.start()

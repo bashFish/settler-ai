@@ -136,7 +136,7 @@ class Ui:
         if self._terrain_canvas:
             self.canvas.delete(self._terrain_canvas)
 
-        owned_terrain = self._state.get_owned_terrain()
+        owned_terrain = self._state.get_owned_terrain().astype(np.int16) #TODO: move this conversion somewhere
 
         result = rasterio.features.shapes(owned_terrain)
         polygon = next(result)
