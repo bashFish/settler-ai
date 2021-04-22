@@ -40,7 +40,6 @@ class State(object):
         buildings_conf, _, _ = parse_buildings()
         self._building_factory = Factory(buildings_conf)
         self.buildings = []
-        self.constructing_buildings = []
         self.availableCarrier = 0
 
         self.settler_score_penalty = 0
