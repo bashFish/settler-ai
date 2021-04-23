@@ -95,8 +95,11 @@ class State(object):
         self.state_dict[material] += 1
         self.availableCarrier -= 1
 
+    def check_coordinates_buildable(self, coordinate):
+        return self.landscape_occupation[coordinate] == 0 and self.owned_terrain[coordinate]
+
     def construct_building(self, coordinate, building):
-        if self.landscape_occupation[coordinate] == 0 and self.owned_terrain[coordinate]:
+        if self.check_coordinates_buildable(coordinate):
             self.buildings.append(self._building_factory.create_building(building, coordinate))
             return True
         return False

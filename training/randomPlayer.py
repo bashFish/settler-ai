@@ -4,6 +4,8 @@ import time
 import numpy as np
 from tensorflow.python.keras.utils import losses_utils
 
+from building.sawmill import Sawmill
+from building.woodcutter import Woodcutter
 from control import Control
 from events import GameEvent
 from misc import parse_buildings
@@ -17,11 +19,18 @@ rows, cols = 50, 50
 all_keys = list(key_to_building.keys())
 all_keys.extend(['d', 'q', '-'])
 
+num_games=250
+moves_per_game = 5  # it's approximated moves! actually: 5*20=100 ticks! # can't be just one, othw always starts with barack
+
+
 # open research problems AI
 #   - NLP
 #   - auto-mapping and more precise output (no one-hot encode/ hand-crafted lstm etc.)
 #   -
 
+# 0 0 TODO: owned land doch schon mitgeben?
+#           heatmap, nicht 2 koordinaten ausgeben!(?)
+#0) FIRST THING TO EXCHANGE: internal state needs to be trained separatedly!
 
 #1) learn valid moves
 #2) learn basic objectives: wood->cutter around/ wood -> sawmill -> plank/ barack extends
@@ -52,7 +61,7 @@ import tensorflow as tf
 
 def model_action():
     model = tf.keras.models.Sequential()
-    model.add(tf.keras.Input(shape=(50*50+5+3+10*10)))
+    model.add(tf.keras.Input(shape=(50*50+7+3+10*10)))
     model.add(tf.keras.layers.Dense(250, activation='relu'))
     model.add(tf.keras.layers.Dense(150, activation='relu'))
     model.add(tf.keras.layers.Dense(250, activation='relu'))
@@ -66,7 +75,7 @@ def model_action():
 
 def model_coordinates(): #TODO: use convolutional -> generate heat map here?
     model = tf.keras.models.Sequential()
-    model.add(tf.keras.Input(shape=(50*50+10*10+15)))
+    model.add(tf.keras.Input(shape=(50*50+10*10+5)))
     model.add(tf.keras.layers.Dense(50, activation='relu'))
     model.add(tf.keras.layers.Dense(50, activation='relu'))
     model.add(tf.keras.layers.Dense(20, activation='relu'))
@@ -101,10 +110,10 @@ def enqueue_random_valid_action(state):
 
     #elif key == 'q':
     #    state.add_game_event(GameEvent.END_GAME)
-    elif category > .7: #key != '-':
+    elif category > .8: #key != '-':
         key = random.choice(list(key_to_building.keys()))
         possible = np.where(state.get_owned_terrain() == 1)
-        position = random.randint(0, len(possible[0]))
+        position = random.randint(0, len(possible[0])-1)
         x, y = possible[0][position], possible[1][position]
         cell = (x, y)
         state.add_game_event(GameEvent.CONSTRUCT_BUILDING, (cell, key_to_building[key]))
@@ -138,6 +147,8 @@ def state_representation(state):
     #state.buildings, # can be inherited from occupation map
     return [state.landscape_occupation,
             list(state.state_dict.values()),
+            len([s for s in state.buildings if s == Sawmill]),
+            len([s for s in state.buildings if s == Woodcutter]),
             state.availableCarrier,
             state.tick,
             state.settler_score_penalty] #, state.get_score()]
@@ -149,10 +160,10 @@ def state_representation_vector(state,old_states):
     #print(result.shape)
     return result
 
-def state_representation_vector_2(state,old_states,model1_out):
+def state_representation_vector_2(state,old_states,building):
 
     cur = state_representation(state)
-    result = np.array([np.hstack([cur[0].reshape(-1),np.array(old_states).reshape(-1),model1_out[0]]).astype(np.int)])
+    result = np.array([np.hstack([cur[0].reshape(-1),np.array(old_states).reshape(-1),building]).astype(np.int)])
     #print(result.shape)
     return result
 
@@ -164,6 +175,19 @@ def state_representation_vector_2(state,old_states,model1_out):
 # - "more planks" -> "need sawmill, but also more wood"
 # - detect areas on map to be used eventually, eg with wood etc
 
+"""
+def prediction_to_coords(preds):
+    coords = preds*10
+    cell = (int(min(round(abs(coords[0]), -1) / 10, 49)), int(min(round(abs(coords[1]), -1) / 10, 49)))
+    return cell
+"""
+
+def prediction_to_coords(preds):
+    coords = preds*10
+    cell = (int(min(abs(coords[0]) , 49)), int(min(abs(coords[1]) , 49)))
+    return cell
+
+
 #TODO: copied configs!
 if __name__ == '__main__':
 
@@ -173,7 +197,7 @@ if __name__ == '__main__':
     loss_function = tf.keras.losses.Huber(delta=1.0, reduction=losses_utils.ReductionV2.AUTO)
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
-    for j in range(1):
+    for j in range(num_games):
         print("\t %s" % (j))
         s = State()
         g = Control(s)
@@ -191,33 +215,36 @@ if __name__ == '__main__':
             predict_key, coords = None, None
 
             # TODO: Use epsilon-greedy for exploration
-            if random.random() > 0.9: # 10% random moves
+            if random.random() > 0.8: # 10% random moves
+                print("random")
                 predict_key, coords = enqueue_random_valid_action(s)
-                continue
+                for ijk in range(5):
+                    if all_keys_model[ijk] == predict_key:
+                        building = tf.one_hot(ijk, 5)
+                        predict_key_position = ijk
 
-            prediction = m_action.predict(state_representation_vector(s, old_gambled_states))
+            else:
+                prediction = m_action.predict(state_representation_vector(s, old_gambled_states))
 
-            old_gambled_states.append(prediction[0][:10])
-            del old_gambled_states[0]
+                old_gambled_states.append(prediction[0][:10])
+                del old_gambled_states[0]
 
-            move = prediction[0][10:]
-            predict_key_position = np.argmax(move)
-            predict_key = all_keys_model[predict_key_position]
+                move = prediction[0][10:]
+                predict_key_position = np.argmax(move)
+                predict_key = all_keys_model[predict_key_position]
+                building = tf.one_hot(predict_key_position, 5)
 
-            if predict_key != '-':
-                prediction_2 = m_coords.predict(state_representation_vector_2(s, old_gambled_states, prediction))
-                coords = prediction_2[0]
-                cell = (int(max(round(abs(coords[0]), -1)/10, 49)), int(max(round(abs(coords[1]), -1)/10, 49)))
-                s.add_game_event(GameEvent.CONSTRUCT_BUILDING, (cell, key_to_building[predict_key]))
+                if predict_key != '-':
+                    prediction_2 = m_coords.predict(state_representation_vector_2(s, old_gambled_states, building))
+                    cell = prediction_to_coords(prediction_2[0])
+                    #print(" pred %s %s" %(prediction_2, cell))
+                    s.add_game_event(GameEvent.CONSTRUCT_BUILDING, (cell, key_to_building[predict_key]))
 
-            print(move, coords)
-            print(predict_key_position)
-            print(predict_key)
 
             #state_history.append(copy.deepcopy(s))
             action_input.append(state_representation_vector(s, old_gambled_states)[0])
             if predict_key != '-':
-                coord_input.append(state_representation_vector_2(s, old_gambled_states, prediction))
+                coord_input.append(state_representation_vector_2(s, old_gambled_states, building))
             else:
                 coord_input.append(None)
             action_history.append((predict_key, predict_key_position, coords))
@@ -229,65 +256,62 @@ if __name__ == '__main__':
                 updated_q_values = np.array(score_history[5:15])-np.array(score_history[:10])
                 with tf.GradientTape() as tape:
                     tape.watch(m_action.trainable_variables)
-                    # Train the model on the states and updated Q-values
-                    print(action_history)
-                    print(np.array(action_input).shape)
-                    q_values = m_action(np.array([action_input[:10]])) #[1:9])
-                    print(q_values)
-                    print(tf.reduce_max(q_values, axis=1))
-                    #exit()
+                    q_values = m_action(np.array([action_input[:10]]))
                     q_action = tf.reduce_sum(tf.multiply(q_values[:, :, 10:], move_matrices),axis=2)
 
-                    #old_scores = tf.convert_to_tensor([np.array(score_history[1])/1000.],dtype=tf.float32) #-9:-1]
-                    #new_scores = tf.convert_to_tensor([np.array(score_history[2])/1000.],dtype=tf.float32)  #-8:  TODO: add gamma thingy
-
-                    """
-                    future_rewards = model_target.predict(state_next_sample)
-                    # Q value = reward + discount factor * expected future reward
-                    updated_q_values = rewards_sample + gamma * tf.reduce_max(
-                        future_rewards, axis=1
-                    )
-
-                    # If final frame set the last value to -1
-                    updated_q_values = updated_q_values * (1 - done_sample) - done_sample
-
-                    # Create a mask so we only calculate loss on the updated Q-values
-                    masks = tf.one_hot(action_sample, num_actions)
-
-                    with tf.GradientTape() as tape:
-                        # Train the model on the states and updated Q-values
-                        q_values = model(state_sample)
-
-                        # Apply the masks to the Q-values to get the Q-value for action taken
-                        q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
-                        # Calculate loss between new Q-value and old Q-value
-                        loss = loss_function(updated_q_values, q_action)
-
-                    # Apply the masks to the Q-values to get the Q-value for action taken
-                    q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
-                    """
-
-                    # Calculate loss between new Q-value and old Q-value
-                    print(updated_q_values, q_action)
                     loss = loss_function(updated_q_values, q_action)
-                    #print(new_scores, old_scores, loss)
-                    #loss = new_scores - old_scores
-                    #print(loss)
-
                     grads = tape.gradient(loss, m_action.trainable_variables)
-                    print(grads)
 
                 optimizer.apply_gradients(zip(grads, m_action.trainable_variables))
-                state_history = state_history[-20:]
-                action_history = action_history[-20:]
-                action_input = action_input[-20:]
-                coord_input = coord_input[-20:]
-                score_history = score_history[-20:]
+
+                current_coords_in = []
+                current_updated_q = []
+                for histi, histk in enumerate(action_history):
+                    if histi > 14:
+                        break
+                    if coord_input[histi] is not None:
+                        current_coords_in.append(coord_input[histi])
+                        current_updated_q.append(score_history[histi+5]-score_history[histi])
+                if len(current_coords_in):
+                    with tf.GradientTape() as tape:
+
+                        tape.watch(m_coords.trainable_variables)
+                        q_values_coords = m_coords(np.array(current_coords_in))[:,0,:]
+                        # q_action_coords = tf.reduce_sum(tf.multiply(q_values_coords[:, :, 10:], move_matrices),axis=2)
+                        #if coord
+
+                        possible = np.where(s.get_owned_terrain() == 1)
+                        position = random.randint(0, len(possible[0]) - 1)  # TODO: one for all?
+                        for ijf, coo in enumerate(q_values_coords):
+                            curcod = prediction_to_coords(coo.numpy())
+
+                            if not s.get_owned_terrain()[curcod]:
+                                x, y = possible[0][position], possible[1][position]
+                                current_updated_q[ijf] -= abs(coo[0]*10-x) + abs(coo[1]*10-y)
+
+                        #coords = (q_values_coords)
+                        #print(coords, s.check_coordinates_buildable(coords))
+                        #print(current_updated_q, q_values_coords[:,0])
+                        loss = loss_function(current_updated_q, q_values_coords[:,0] + q_values_coords[:,1])
+                        grads2 = tape.gradient(loss, m_coords.trainable_variables)
+
+                    optimizer.apply_gradients(zip(grads2, m_coords.trainable_variables))
+
+                state_history = [] #state_history[-20:]
+                action_history = [] #action_history[-20:]
+                action_input = [] #action_input[-20:]
+                coord_input = [] #coord_input[-20:]
+                score_history = [] #score_history[-20:]
 
             #time.sleep(1)
             i += 1
-            if i > 91:
+            if i > 20*moves_per_game+1:
                 break
 
 
-        print("Final score: %s/ %s" % (s.get_score(), s.get_ticks()))
+        #print("Final score: %s/ %s" % (s.get_score(), s.get_ticks()))
+    named_tuple = time.localtime()  # get struct_time
+    time_string = time.strftime("%Y%m%d_%H_%M", named_tuple)
+
+    m_action.save("models/action_%s.h5"%(time_string))
+    m_coords.save("models/coords_%s.h5"%(time_string))
