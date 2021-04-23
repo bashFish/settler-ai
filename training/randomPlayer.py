@@ -20,13 +20,17 @@ all_keys = list(key_to_building.keys())
 all_keys.extend(['d', 'q', '-'])
 
 num_games=250
-moves_per_game = 5  # it's approximated moves! actually: 5*20=100 ticks! # can't be just one, othw always starts with barack
+moves_per_game = 10  # it's approximated moves! actually: 10*20=200 ticks! # can't be just one, othw always starts with barack
 
 
 # open research problems AI
 #   - NLP
 #   - auto-mapping and more precise output (no one-hot encode/ hand-crafted lstm etc.)
 #   -
+
+# TODO : abort game when gameover!! -> penalty on all moves that led there.
+# TODO: 1) invalid move -> penalty! auch bei action (eg keine bretter mehr da)
+#       2)   mehr als 5 ticks in vorraus schauen! vielleicht in 5 und in 10! (erst da wird produktion anfangen)
 
 # 0 0 TODO: owned land doch schon mitgeben?
 #           heatmap, nicht 2 koordinaten ausgeben!(?)
@@ -211,7 +215,7 @@ if __name__ == '__main__':
 
         i = 1
         for r in g.yieldloop():
-            print("\t %s \t %s" % (j, i))
+            print("\t %s \t %s \t %s %s" % (j, i, s.get_score(), s.get_state_dict()))
             predict_key, coords = None, None
 
             # TODO: Use epsilon-greedy for exploration
