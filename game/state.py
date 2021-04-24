@@ -72,7 +72,7 @@ class State(object):
     def increment_tick(self):
         self.availableCarrier = self.state_dict['carrier']
         self.tick += 1
-        self.settler_score_penalty += self.state_dict['settler']
+        self.settler_score_penalty += self.state_dict['settler']+self.get_num_constructions()*10
         #TODO: is order important?
         cur_buildings = self.buildings.copy()
         random.shuffle(cur_buildings)
@@ -175,6 +175,9 @@ class State(object):
             #TODO: should this event be thrown here?
             self.add_ui_event(UiEvent.DELETE_CELL, (coordinate[0]+result[0][0]-(occupation.shape[0]-1)/2,coordinate[1]+result[1][0]-(occupation.shape[1]-1)/2))
         return True
+
+    def get_num_constructions(self):
+        return len([b for b in self.buildings if b.finished == False])
 
     def get_score(self):
         return np.sum(self.owned_terrain)*3+self.state_dict['produced_plank']*100+self.state_dict['produced_wood']*50-(self.settler_score_penalty>>1)
