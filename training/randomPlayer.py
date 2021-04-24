@@ -1,4 +1,5 @@
 import copy
+import pickle
 import time
 
 import numpy as np
@@ -209,15 +210,29 @@ top_building_coords = {}
 def get_best_player_move_randomized(state, move):
     #highest = max((sc[0], it) for it, sc in enumerate(top_10_games))
     highest = top_10_games[-1]
-    if random.random() > .9 or highest[0] < 0:   # 5 % total random moves
-        key, cell = generate_random_valid_action(state)
+    key, cell_r = generate_random_valid_action(state)
+    if random.random() > .9 or highest[0] < 0:   # 10 % total random moves
+        return key, cell_r
     else:
         current = -1
-        while current > -8 and top_10_games[current-1][0] > 0 and random.random() > .7:
+        while current > -8 and top_10_games[current-1][0] > 0 and random.random() > .8:
             current -= 1
         key,_, cell = top_10_games[current][1][move]
+        if random.random() > .95:
+            while not cell_r:
+                _, cell_r = generate_random_valid_action(state)
+            cell = cell_r
 
     return key, cell
+
+
+def save_everything(m_action, m_coords, top_10_games):
+    named_tuple = time.localtime()  # get struct_time
+    time_string = time.strftime("%Y%m%d_%H_%M", named_tuple)
+    m_action.save("models/action_%s.h5"%(time_string))
+    m_coords.save("models/coords_%s.h5"%(time_string))
+    with open("models/top10_%s.pckl"%(time_string), 'wb') as hd:
+        pickle.dump(top_10_games, hd)
 
 #TODO: copied configs!
 if __name__ == '__main__':
@@ -250,8 +265,6 @@ if __name__ == '__main__':
                 if random.random() > 0.2: # 80% best player / random moves
                     predict_key, coords = get_best_player_move_randomized(s, i)
                     print("random %s %s"%(predict_key, coords))
-                    if predict_key != '-':
-                        s.add_game_event(GameEvent.CONSTRUCT_BUILDING, (coords, key_to_building[predict_key]))
 
                     for ijk in range(5):
                         if all_keys_model[ijk] == predict_key:
@@ -274,14 +287,15 @@ if __name__ == '__main__':
                         prediction_2 = m_coords.predict(state_representation_vector_2(s, old_gambled_states, building))
                         coords = prediction_to_coords(prediction_2[0])
 
-                        while not s.check_coordinates_buildable(coords):
-                            possible = np.where(s.get_owned_terrain() == 1)
-                            position = random.randint(0, len(possible[0]) - 1)
-                            coords = (possible[0][position],possible[1][position])
+                if predict_key != '-':
+                    while not s.check_coordinates_buildable(coords):
+                        possible = np.where(s.get_owned_terrain() == 1)
+                        position = random.randint(0, len(possible[0]) - 1)
+                        coords = (possible[0][position],possible[1][position])
 
-                        s.add_game_event(GameEvent.CONSTRUCT_BUILDING, (coords, key_to_building[predict_key]))
+                    s.add_game_event(GameEvent.CONSTRUCT_BUILDING, (coords, key_to_building[predict_key]))
 
-                    print(" predicted %s %s"%(predict_key, coords))
+            print(" predicted %s %s"%(predict_key, coords))
 
             action_input.append(state_representation_vector(s, old_gambled_states)[0])
             if predict_key and predict_key != '-':
@@ -337,7 +351,7 @@ if __name__ == '__main__':
                     optimizer.apply_gradients(zip(grads2, m_coords.trainable_variables))
 
                 lowest = min((sc[0],it) for it, sc in enumerate(top_10_games))
-                if lowest[0] < score_history[-1]:
+                if lowest[0] < score_history[-1] and score_history[-1] not in [sc[0] for sc in top_10_games]:
                     del top_10_games[lowest[1]]
                     top_10_games.append((score_history[-1], action_history[:10]))
                     top_10_games.sort()
@@ -349,17 +363,14 @@ if __name__ == '__main__':
                 coord_input = [] #coord_input[-20:]
                 score_history = [] #score_history[-20:]
 
-                break
-
             i += 1
             #time.sleep(1)
-            #if i > 51: #20*moves_per_game+1:
-            #    break
-
+            if i > 51: #20*moves_per_game+1:
+                if j % 1000 == 999:
+                    save_everything(m_action, m_coords, top_10_games)
+                    print(top_10_games)
+                break
 
         #print("Final score: %s/ %s" % (s.get_score(), s.get_ticks()))
-    named_tuple = time.localtime()  # get struct_time
-    time_string = time.strftime("%Y%m%d_%H_%M", named_tuple)
+    save_everything(m_action,m_coords,top_10_games)
 
-    m_action.save("models/action_%s.h5"%(time_string))
-    m_coords.save("models/coords_%s.h5"%(time_string))

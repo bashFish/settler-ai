@@ -98,7 +98,7 @@ class State(object):
         self.availableCarrier -= 1
 
     def check_coordinates_buildable(self, coordinate):
-        return self.landscape_occupation[coordinate] == 0 and self.owned_terrain[coordinate]
+        return self.landscape_occupation[coordinate] == 0 and self.owned_terrain[coordinate] and coordinate not in [b.coordinate for b in self.buildings]
 
     def construct_building(self, coordinate, building):
         if self.check_coordinates_buildable(coordinate):
