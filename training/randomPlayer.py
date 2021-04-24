@@ -20,9 +20,11 @@ rows, cols = 50, 50
 all_keys = list(key_to_building.keys())
 all_keys.extend(['d', 'q', '-'])
 
-num_games = 10000
+num_games = 100000
 moves_per_game = 10  # it's approximated moves! actually: 10*20=200 ticks! # can't be just one, othw always starts with barack
 
+
+#TODO: try tensorboard
 
 #TODO: find/ store top game moves!
 #           train towards that one
@@ -241,16 +243,16 @@ def get_best_player_move_randomized(state, move):
     return key, cell
 
 
-def save_everything(m_action, m_coords, top_10_games, state):
+def save_everything(m_action, m_coords, top_10_games, state, prefix=''):
     named_tuple = time.localtime()  # get struct_time
     time_string = time.strftime("%Y%m%d_%H_%M", named_tuple)
-    m_action.save("models/%s_action.h5"%(time_string))
-    m_coords.save("models/%s_coords.h5"%(time_string))
-    with open("models/%s_top10.pckl"%(time_string), 'wb') as hd:
+    m_action.save("models/%s_%s_action.h5"%(time_string, prefix))
+    m_coords.save("models/%s_%s_coords.h5"%(time_string,prefix))
+    with open("models/%s_%s_top10.pckl"%(time_string,prefix), 'wb') as hd:
         pickle.dump(top_10_games, hd)
     from matplotlib import pyplot as plt
-    plt.imsave("models/%s_state.png"%(time_string), state.get_landscape_occupation())
-    with open("models/%s_state.pckl"%(time_string), 'wb') as hd:
+    plt.imsave("models/%s_%s_state.png"%(time_string,prefix), state.get_landscape_occupation())
+    with open("models/%s_%s_state.pckl"%(time_string,prefix), 'wb') as hd:
         pickle.dump(state, hd)
 
 def load_state_top10(time_string):
@@ -268,14 +270,14 @@ def load_state_models(time_string):
 #TODO: copied configs!
 if __name__ == '__main__':
 
-    time_str = None # trained for 5k moves with 80% random moves
+    time_str = '20210424_20_45' # trained for 5k moves with 80% random moves
 
     m_action = model_action()
     m_coords = model_coordinates()
 
     if time_str:
         load_state_top10(time_str)
-        #m_action, m_coords = load_state(time_str)
+        m_action, m_coords = load_state_models(time_str)
 
     loss_function = tf.keras.losses.Huber(delta=1.0, reduction=losses_utils.ReductionV2.AUTO)
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.0000025, clipnorm=.5)
@@ -303,12 +305,12 @@ if __name__ == '__main__':
 
         i = 1
         for r in g.yieldloop():
-            print("\t %s \t %s \t %s %s" % (j, i, s.get_score(), s.get_state_dict()))
+            print("\t %s \t %s \t %s " % (j, i, s.get_score()))
             predict_key, coords = '-', None
 
             if i < 10:
                 # TODO: Use epsilon-greedy for exploration
-                if random.random() > 0.15: # 80% best player / random moves
+                if random.random() > 0.55: # 80% best player / random moves
                     predict_key, coords = get_best_player_move_randomized(s, i)
                     print("random %s %s"%(predict_key, coords))
 
@@ -414,11 +416,11 @@ if __name__ == '__main__':
             i += 1
             #time.sleep(1)
             if i > 51: #20*moves_per_game+1:
-                if j % 1000 == 0:
-                    save_everything(m_action, m_coords, top_10_games,s)
+                if j % 4000 == 0:
+                    save_everything(m_action, m_coords, top_10_games,s,str(j))
                     print(top_10_games)
                 break
 
         #print("Final score: %s/ %s" % (s.get_score(), s.get_ticks()))
-    save_everything(m_action,m_coords,top_10_games, s)
+    save_everything(m_action,m_coords,top_10_games, s, 'final')
 

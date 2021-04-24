@@ -72,7 +72,7 @@ class State(object):
     def increment_tick(self):
         self.availableCarrier = self.state_dict['carrier']
         self.tick += 1
-        self.settler_score_penalty += self.state_dict['settler']+self.get_num_constructions()*10
+        self.settler_score_penalty += self.state_dict['settler']+self.get_num_constructions()*5 #10 was way too much, i guess
         #TODO: is order important?
         cur_buildings = self.buildings.copy()
         random.shuffle(cur_buildings)
