@@ -3,5 +3,9 @@
   "carrier": 0,
   "freeCarrier": 0,
   "wood": 10,
-  "plank": 5
+  "plank": 5,
+  "produced_wood": 0,
+  "produced_plank": 0,
+  "consumed_wood": 0,
+  "consumed_plank": 0
 }

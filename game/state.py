@@ -88,11 +88,13 @@ class State(object):
 
     def acquireMaterial(self, material):
         self.state_dict[material] -= 1
+        self.state_dict["consumed_%s"%(material)] += 1
         self.availableCarrier -= 1
         return material
 
     def addMaterial(self, material):
         self.state_dict[material] += 1
+        self.state_dict["produced_%s"%(material)] += 1
         self.availableCarrier -= 1
 
     def check_coordinates_buildable(self, coordinate):
@@ -175,7 +177,7 @@ class State(object):
         return True
 
     def get_score(self):
-        return np.sum(self.owned_terrain)*3+self.state_dict['plank']*40+self.state_dict['wood']*20-(self.settler_score_penalty>>2)
+        return np.sum(self.owned_terrain)*3+self.state_dict['produced_plank']*100+self.state_dict['produced_wood']*50-(self.settler_score_penalty>>1)
 
     # TODO: seems like only proper methods are shareable thru process/manager :/
     def get_ticks(self):

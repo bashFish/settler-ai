@@ -19,7 +19,7 @@ rows, cols = 50, 50
 all_keys = list(key_to_building.keys())
 all_keys.extend(['d', 'q', '-'])
 
-num_games=250
+num_games = 10000
 moves_per_game = 10  # it's approximated moves! actually: 10*20=200 ticks! # can't be just one, othw always starts with barack
 
 
@@ -65,9 +65,8 @@ import tensorflow as tf
 
 def model_action():
     model = tf.keras.models.Sequential()
-    model.add(tf.keras.Input(shape=(50*50+7+3+10*10)))
-    model.add(tf.keras.layers.Dense(250, activation='relu'))
-    model.add(tf.keras.layers.Dense(150, activation='relu'))
+    model.add(tf.keras.Input(shape=(50*50+11+3+10*10)))
+    model.add(tf.keras.layers.Dense(350, activation='relu'))
     model.add(tf.keras.layers.Dense(250, activation='relu'))
     model.add(tf.keras.layers.Dense(150, activation='relu'))
     model.add(tf.keras.layers.Dense(50, activation='relu'))
@@ -80,7 +79,8 @@ def model_action():
 def model_coordinates(): #TODO: use convolutional -> generate heat map here?
     model = tf.keras.models.Sequential()
     model.add(tf.keras.Input(shape=(50*50+10*10+5)))
-    model.add(tf.keras.layers.Dense(50, activation='relu'))
+    model.add(tf.keras.layers.Dense(250, activation='relu'))
+    model.add(tf.keras.layers.Dense(150, activation='relu'))
     model.add(tf.keras.layers.Dense(50, activation='relu'))
     model.add(tf.keras.layers.Dense(20, activation='relu'))
     model.add(tf.keras.layers.Dense(2)) # < must be in 0,50
@@ -114,7 +114,7 @@ def enqueue_random_valid_action(state):
 
     #elif key == 'q':
     #    state.add_game_event(GameEvent.END_GAME)
-    elif category > .8: #key != '-':
+    elif category > .4: #key != '-':
         key = random.choice(list(key_to_building.keys()))
         possible = np.where(state.get_owned_terrain() == 1)
         position = random.randint(0, len(possible[0])-1)
@@ -218,34 +218,41 @@ if __name__ == '__main__':
             print("\t %s \t %s \t %s %s" % (j, i, s.get_score(), s.get_state_dict()))
             predict_key, coords = None, None
 
-            # TODO: Use epsilon-greedy for exploration
-            if random.random() > 0.8: # 10% random moves
-                print("random")
-                predict_key, coords = enqueue_random_valid_action(s)
-                for ijk in range(5):
-                    if all_keys_model[ijk] == predict_key:
-                        building = tf.one_hot(ijk, 5)
-                        predict_key_position = ijk
+            if i < 11:
+                # TODO: Use epsilon-greedy for exploration
+                if random.random() > 0.8: # 10% random moves
+                    print("random")
+                    predict_key, coords = enqueue_random_valid_action(s)
+                    for ijk in range(5):
+                        if all_keys_model[ijk] == predict_key:
+                            building = tf.one_hot(ijk, 5)
+                            predict_key_position = ijk
 
-            else:
-                prediction = m_action.predict(state_representation_vector(s, old_gambled_states))
+                else:
+                    prediction = m_action.predict(state_representation_vector(s, old_gambled_states))
 
-                old_gambled_states.append(prediction[0][:10])
-                del old_gambled_states[0]
+                    old_gambled_states.append(prediction[0][:10])
+                    del old_gambled_states[0]
 
-                move = prediction[0][10:]
-                predict_key_position = np.argmax(move)
-                predict_key = all_keys_model[predict_key_position]
-                building = tf.one_hot(predict_key_position, 5)
+                    move = prediction[0][10:]
+                    predict_key_position = np.argmax(move)
+                    predict_key = all_keys_model[predict_key_position]
+                    building = tf.one_hot(predict_key_position, 5)
+                    coords = None
 
-                if predict_key != '-':
-                    prediction_2 = m_coords.predict(state_representation_vector_2(s, old_gambled_states, building))
-                    cell = prediction_to_coords(prediction_2[0])
-                    #print(" pred %s %s" %(prediction_2, cell))
-                    s.add_game_event(GameEvent.CONSTRUCT_BUILDING, (cell, key_to_building[predict_key]))
+                    if predict_key != '-':
+                        prediction_2 = m_coords.predict(state_representation_vector_2(s, old_gambled_states, building))
+                        coords = prediction_to_coords(prediction_2[0])
+                        #print(" pred %s %s" %(prediction_2, cell))
+                        while not s.check_coordinates_buildable(coords):
+                            possible = np.where(s.get_owned_terrain() == 1)
+                            position = random.randint(0, len(possible[0]) - 1)
+                            coords = (possible[0][position],possible[1][position])
 
+                        s.add_game_event(GameEvent.CONSTRUCT_BUILDING, (coords, key_to_building[predict_key]))
 
-            #state_history.append(copy.deepcopy(s))
+                    print(" predicted %s %s"%(predict_key, coords))
+
             action_input.append(state_representation_vector(s, old_gambled_states)[0])
             if predict_key != '-':
                 coord_input.append(state_representation_vector_2(s, old_gambled_states, building))
@@ -255,9 +262,9 @@ if __name__ == '__main__':
             score_history.append(s.get_score())
 
             # train step
-            if i % 20 == 0:
+            if i % 50 == 0:
                 move_matrices = tf.one_hot([c[1] for c in action_history[:10]], 5)
-                updated_q_values = np.array(score_history[5:15])-np.array(score_history[:10])
+                updated_q_values = np.array(score_history[5:15])-np.array(score_history[:10])+(np.array(score_history[35:45])-np.array(score_history[:10]))*2
                 with tf.GradientTape() as tape:
                     tape.watch(m_action.trainable_variables)
                     q_values = m_action(np.array([action_input[:10]]))
@@ -270,12 +277,14 @@ if __name__ == '__main__':
 
                 current_coords_in = []
                 current_updated_q = []
+                target_coords = []
                 for histi, histk in enumerate(action_history):
-                    if histi > 14:
+                    if histi > 9:
                         break
                     if coord_input[histi] is not None:
                         current_coords_in.append(coord_input[histi])
-                        current_updated_q.append(score_history[histi+5]-score_history[histi])
+                        current_updated_q.append(score_history[histi+10]-score_history[histi]+(score_history[histi+30]-score_history[histi])*2)
+                        target_coords.append(action_history[histi][2])
                 if len(current_coords_in):
                     with tf.GradientTape() as tape:
 
@@ -284,14 +293,10 @@ if __name__ == '__main__':
                         # q_action_coords = tf.reduce_sum(tf.multiply(q_values_coords[:, :, 10:], move_matrices),axis=2)
                         #if coord
 
-                        possible = np.where(s.get_owned_terrain() == 1)
-                        position = random.randint(0, len(possible[0]) - 1)  # TODO: one for all?
                         for ijf, coo in enumerate(q_values_coords):
                             curcod = prediction_to_coords(coo.numpy())
-
-                            if not s.get_owned_terrain()[curcod]:
-                                x, y = possible[0][position], possible[1][position]
-                                current_updated_q[ijf] -= abs(coo[0]*10-x) + abs(coo[1]*10-y)
+                            x,y = target_coords[ijf]
+                            current_updated_q[ijf] -= abs(coo[0]*10-x) + abs(coo[1]*10-y)
 
                         #coords = (q_values_coords)
                         #print(coords, s.check_coordinates_buildable(coords))
@@ -309,7 +314,7 @@ if __name__ == '__main__':
 
             #time.sleep(1)
             i += 1
-            if i > 20*moves_per_game+1:
+            if i > 51: #20*moves_per_game+1:
                 break
 
 
