@@ -23,6 +23,15 @@ num_games = 10000
 moves_per_game = 10  # it's approximated moves! actually: 10*20=200 ticks! # can't be just one, othw always starts with barack
 
 
+#TODO: find/ store top game moves!
+#           train towards that one
+#   eg: move[1] sawmill [pos1 pos2] or sawmill -> [pos1/2, pos3/4,...], randomly pick out of
+#      building prediciton at move 1 sawmill ->  second network trained towards pos1/2
+#   best game strategy: sawmill,  woodcutter -> predict that
+#                   ALREADY predict multiple moves in the begining?
+#
+#   -> 30% exchange a move, then 30% exchange a coordinate
+
 # open research problems AI
 #   - NLP
 #   - auto-mapping and more precise output (no one-hot encode/ hand-crafted lstm etc.)
