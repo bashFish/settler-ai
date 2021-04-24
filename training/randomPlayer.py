@@ -32,6 +32,13 @@ moves_per_game = 10  # it's approximated moves! actually: 10*20=200 ticks! # can
 #                   ALREADY predict multiple moves in the begining?
 #
 #   -> 30% exchange a move, then 30% exchange a coordinate
+# TODO: dropout, L1 norm?
+#
+# TODO: make player playing against each other
+#    -> lstd maessig 1/0 rating?
+#
+
+
 
 # open research problems AI
 #   - NLP
@@ -76,12 +83,17 @@ import tensorflow as tf
 def model_action():
     model = tf.keras.models.Sequential()
     model.add(tf.keras.Input(shape=(50*50+11+3+10*10)))
-    model.add(tf.keras.layers.Dense(350, activation='relu'))
     model.add(tf.keras.layers.Dense(250, activation='relu'))
-    model.add(tf.keras.layers.Dense(150, activation='relu'))
+    model.add(tf.keras.layers.Dense(450, activation='relu'))
+    model.add(tf.keras.layers.Dropout(.2))
+    model.add(tf.keras.layers.Dense(250, activation='relu'))
     model.add(tf.keras.layers.Dense(50, activation='relu'))
+    model.add(tf.keras.layers.Dropout(.1))
     #TODO: remove should be handled somewhat different
-    model.add(tf.keras.layers.Dense(5+10)) # 7 moves possible, 10 = new state
+    model.add(tf.keras.layers.Dense(5+10,
+        kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
+        bias_regularizer=tf.keras.regularizers.l2(1e-4),
+        activity_regularizer=tf.keras.regularizers.l2(1e-5))) # 7 moves possible, 10 = new state
     print("in/out : %s %s" %(50*50+5+3+10*10, 5+10))
     model.summary()
     return model
@@ -90,9 +102,11 @@ def model_coordinates(): #TODO: use convolutional -> generate heat map here?
     model = tf.keras.models.Sequential()
     model.add(tf.keras.Input(shape=(50*50+10*10+5)))
     model.add(tf.keras.layers.Dense(250, activation='relu'))
+    model.add(tf.keras.layers.Dense(450, activation='relu'))
+    model.add(tf.keras.layers.Dropout(.2))
     model.add(tf.keras.layers.Dense(150, activation='relu'))
-    model.add(tf.keras.layers.Dense(50, activation='relu'))
     model.add(tf.keras.layers.Dense(20, activation='relu'))
+    model.add(tf.keras.layers.Dropout(.1))
     model.add(tf.keras.layers.Dense(2)) # < must be in 0,50
     model.summary()
     print("input: %s" %(50*50+10*10+15))
@@ -229,19 +243,36 @@ def get_best_player_move_randomized(state, move):
 def save_everything(m_action, m_coords, top_10_games):
     named_tuple = time.localtime()  # get struct_time
     time_string = time.strftime("%Y%m%d_%H_%M", named_tuple)
-    m_action.save("models/action_%s.h5"%(time_string))
-    m_coords.save("models/coords_%s.h5"%(time_string))
-    with open("models/top10_%s.pckl"%(time_string), 'wb') as hd:
+    m_action.save("models/%s_action.h5"%(time_string))
+    m_coords.save("models/%s_coords.h5"%(time_string))
+    with open("models/%s_top10.pckl"%(time_string), 'wb') as hd:
         pickle.dump(top_10_games, hd)
+
+def load_state_top10(time_string):
+    global top_10_games
+
+    with open("models/%s_top10.pckl"%(time_string), 'rb') as hd:
+        top_10_games = pickle.load(hd)
+
+def load_state_models(time_string):
+    action = tf.keras.models.load_model("models/%s_action.h5"%(time_string))
+    coords = tf.keras.models.load_model("models/%s_coords.h5"%(time_string))
+    return action, coords
 
 #TODO: copied configs!
 if __name__ == '__main__':
 
+    time_str = "20210424_18_24" # trained for 5k moves with 80% random moves
+
     m_action = model_action()
     m_coords = model_coordinates()
 
+    if time_str:
+        load_state_top10(time_str)
+        #m_action, m_coords = load_state(time_str)
+
     loss_function = tf.keras.losses.Huber(delta=1.0, reduction=losses_utils.ReductionV2.AUTO)
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0000025, clipnorm=.5)
 
     for j in range(num_games):
         print("\t %s" % (j))
@@ -262,7 +293,7 @@ if __name__ == '__main__':
 
             if i < 10:
                 # TODO: Use epsilon-greedy for exploration
-                if random.random() > 0.2: # 80% best player / random moves
+                if random.random() > 0.85: # 80% best player / random moves
                     predict_key, coords = get_best_player_move_randomized(s, i)
                     print("random %s %s"%(predict_key, coords))
 
@@ -308,12 +339,14 @@ if __name__ == '__main__':
             # train step
             if i % 50 == 0:
                 move_matrices = tf.one_hot([c[1] for c in action_history[:10]], 5)
-                updated_q_values = np.array(score_history[5:15])-np.array(score_history[:10])+(np.array(score_history[35:45])-np.array(score_history[:10]))*2
+                updated_q_values = (np.array(score_history[35:45])-np.array(score_history[:10]))
 
                 with tf.GradientTape() as tape:
                     tape.watch(m_action.trainable_variables)
                     q_values = m_action(np.array([action_input[:10]]))
-                    q_action = tf.reduce_sum(tf.multiply(q_values[:, :, 10:], move_matrices),axis=2) #TODO: could be trained differently / wo multiply but abs distance
+                    q_action = tf.reduce_sum(tf.multiply(q_values[:, :, 10:], move_matrices),axis=2)
+                    #TODO: could be trained differently / wo multiply but abs distance:
+                    #    (move_taken_in_matrix [0,1,0,0,0] - this_output) * loss
 
                     loss = loss_function(updated_q_values, q_action)
                     grads = tape.gradient(loss, m_action.trainable_variables)
@@ -326,7 +359,7 @@ if __name__ == '__main__':
                 for histi, histk in enumerate(action_history[:10]):
                     if coord_input[histi] is not None:
                         current_coords_in.append(coord_input[histi])
-                        current_updated_q.append(score_history[histi+10]-score_history[histi]+(score_history[histi+30]-score_history[histi])*2)
+                        current_updated_q.append(score_history[histi+30]-score_history[histi])
                         target_coords.append(action_history[histi][2])
 
                 if len(current_coords_in):
@@ -366,7 +399,7 @@ if __name__ == '__main__':
             i += 1
             #time.sleep(1)
             if i > 51: #20*moves_per_game+1:
-                if j % 1000 == 999:
+                if j % 3000 == 999:
                     save_everything(m_action, m_coords, top_10_games)
                     print(top_10_games)
                 break
