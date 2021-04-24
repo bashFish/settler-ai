@@ -82,7 +82,7 @@ import tensorflow as tf
 
 def model_action():
     model = tf.keras.models.Sequential()
-    model.add(tf.keras.Input(shape=(50*50+11+3+10*10)))
+    model.add(tf.keras.Input(shape=(50*50+12+3+10*10)))
     model.add(tf.keras.layers.Dense(250, activation='relu'))
     model.add(tf.keras.layers.Dense(450, activation='relu'))
     model.add(tf.keras.layers.Dropout(.2))
@@ -93,7 +93,7 @@ def model_action():
     model.add(tf.keras.layers.Dense(5+10,
         kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
         bias_regularizer=tf.keras.regularizers.l2(1e-4),
-        activity_regularizer=tf.keras.regularizers.l2(1e-5))) # 7 moves possible, 10 = new state
+        activity_regularizer=tf.keras.regularizers.l1(1e-3))) # 7 moves possible, 10 = new state
     print("in/out : %s %s" %(50*50+5+3+10*10, 5+10))
     model.summary()
     return model
@@ -174,6 +174,7 @@ def state_representation(state):
     #state.buildings, # can be inherited from occupation map
     return [state.landscape_occupation,
             list(state.state_dict.values()),
+            sum([1 for s in state.buildings if s.finished == False]),
             len([s for s in state.buildings if s == Sawmill]),
             len([s for s in state.buildings if s == Woodcutter]),
             state.availableCarrier,
@@ -240,13 +241,17 @@ def get_best_player_move_randomized(state, move):
     return key, cell
 
 
-def save_everything(m_action, m_coords, top_10_games):
+def save_everything(m_action, m_coords, top_10_games, state):
     named_tuple = time.localtime()  # get struct_time
     time_string = time.strftime("%Y%m%d_%H_%M", named_tuple)
     m_action.save("models/%s_action.h5"%(time_string))
     m_coords.save("models/%s_coords.h5"%(time_string))
     with open("models/%s_top10.pckl"%(time_string), 'wb') as hd:
         pickle.dump(top_10_games, hd)
+    from matplotlib import pyplot as plt
+    plt.imsave("models/%s_state.png"%(time_string), state.get_landscape_occupation())
+    with open("models/%s_state.pckl"%(time_string), 'wb') as hd:
+        pickle.dump(state, hd)
 
 def load_state_top10(time_string):
     global top_10_games
@@ -259,10 +264,11 @@ def load_state_models(time_string):
     coords = tf.keras.models.load_model("models/%s_coords.h5"%(time_string))
     return action, coords
 
+
 #TODO: copied configs!
 if __name__ == '__main__':
 
-    time_str = "20210424_18_24" # trained for 5k moves with 80% random moves
+    time_str = None # trained for 5k moves with 80% random moves
 
     m_action = model_action()
     m_coords = model_coordinates()
@@ -274,10 +280,19 @@ if __name__ == '__main__':
     loss_function = tf.keras.losses.Huber(delta=1.0, reduction=losses_utils.ReductionV2.AUTO)
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.0000025, clipnorm=.5)
 
+    with open("ra.pckl", 'rb') as hd:
+        ls_ra = pickle.load(hd)
+
+    with open("occ.pckl" , 'rb') as hd:
+        ls_occ = pickle.load(hd)
+
+    with open("building.pckl" , 'rb') as hd:
+        building_pos = pickle.load(hd)
+
     for j in range(num_games):
         print("\t %s" % (j))
         s = State()
-        g = Control(s)
+        g = Control(s, copy.deepcopy(ls_ra), copy.deepcopy(ls_occ), copy.deepcopy(building_pos))
         old_gambled_states = [np.zeros(10)] * 10
 
         state_history = []
@@ -293,7 +308,7 @@ if __name__ == '__main__':
 
             if i < 10:
                 # TODO: Use epsilon-greedy for exploration
-                if random.random() > 0.85: # 80% best player / random moves
+                if random.random() > 0.15: # 80% best player / random moves
                     predict_key, coords = get_best_player_move_randomized(s, i)
                     print("random %s %s"%(predict_key, coords))
 
@@ -399,11 +414,11 @@ if __name__ == '__main__':
             i += 1
             #time.sleep(1)
             if i > 51: #20*moves_per_game+1:
-                if j % 3000 == 999:
-                    save_everything(m_action, m_coords, top_10_games)
+                if j % 1000 == 0:
+                    save_everything(m_action, m_coords, top_10_games,s)
                     print(top_10_games)
                 break
 
         #print("Final score: %s/ %s" % (s.get_score(), s.get_ticks()))
-    save_everything(m_action,m_coords,top_10_games)
+    save_everything(m_action,m_coords,top_10_games, s)
 

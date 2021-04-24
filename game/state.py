@@ -98,11 +98,12 @@ class State(object):
         self.availableCarrier -= 1
 
     def check_coordinates_buildable(self, coordinate):
-        return self.landscape_occupation[coordinate] == 0 and self.owned_terrain[coordinate] and coordinate not in [b.coordinate for b in self.buildings]
+        return self.landscape_occupation[coordinate] == 0 and self.owned_terrain[coordinate] # and coordinate not in [b.coordinate for b in self.buildings]
 
     def construct_building(self, coordinate, building):
         if self.check_coordinates_buildable(coordinate):
             self.buildings.append(self._building_factory.create_building(building, coordinate))
+            self.landscape_occupation[coordinate] = -buildings[building]['objectid']
             return True
         return False
 
