@@ -12,6 +12,7 @@ from events import GameEvent
 from misc import parse_buildings
 from state import State
 import random
+import csv
 
 
 buildings, key_to_building, objectid_to_building = parse_buildings()
@@ -23,6 +24,8 @@ all_keys.extend(['d', 'q', '-'])
 num_games = 100000
 moves_per_game = 10  # it's approximated moves! actually: 10*20=200 ticks! # can't be just one, othw always starts with barack
 
+
+#TODO: alle 10 zuege auf einmal trainierne -> vlt werden dann die abhaengigkeiten klarer, die 10 "code" auch mit trainiert
 
 #TODO: try tensorboard
 
@@ -82,14 +85,16 @@ moves_per_game = 10  # it's approximated moves! actually: 10*20=200 ticks! # can
 
 import tensorflow as tf
 
+#TODO: random state output will make things only worse!
+#      use LSTM instead! it also should output a sequence of moves and the coordinates already!
 def model_action():
     model = tf.keras.models.Sequential()
     model.add(tf.keras.Input(shape=(50*50+12+3+10*10)))
-    model.add(tf.keras.layers.Dense(250, activation='relu'))
-    model.add(tf.keras.layers.Dense(450, activation='relu'))
+    model.add(tf.keras.layers.Dense(550, activation='relu'))
+    model.add(tf.keras.layers.Dense(550, activation='relu'))
     model.add(tf.keras.layers.Dropout(.2))
     model.add(tf.keras.layers.Dense(250, activation='relu'))
-    model.add(tf.keras.layers.Dense(50, activation='relu'))
+    model.add(tf.keras.layers.Dense(100, activation='relu'))
     model.add(tf.keras.layers.Dropout(.1))
     #TODO: remove should be handled somewhat different
     model.add(tf.keras.layers.Dense(5+10,
@@ -103,11 +108,11 @@ def model_action():
 def model_coordinates(): #TODO: use convolutional -> generate heat map here?
     model = tf.keras.models.Sequential()
     model.add(tf.keras.Input(shape=(50*50+10*10+5)))
-    model.add(tf.keras.layers.Dense(250, activation='relu'))
-    model.add(tf.keras.layers.Dense(450, activation='relu'))
+    model.add(tf.keras.layers.Dense(550, activation='relu'))
+    model.add(tf.keras.layers.Dense(550, activation='relu'))
     model.add(tf.keras.layers.Dropout(.2))
-    model.add(tf.keras.layers.Dense(150, activation='relu'))
-    model.add(tf.keras.layers.Dense(20, activation='relu'))
+    model.add(tf.keras.layers.Dense(250, activation='relu'))
+    model.add(tf.keras.layers.Dense(100, activation='relu'))
     model.add(tf.keras.layers.Dropout(.1))
     model.add(tf.keras.layers.Dense(2)) # < must be in 0,50
     model.summary()
@@ -270,17 +275,18 @@ def load_state_models(time_string):
 #TODO: copied configs!
 if __name__ == '__main__':
 
-    time_str = '20210424_20_45' # trained for 5k moves with 80% random moves
+    time_str = '20210425_14_48_28000' # trained for 5k moves with 80% random moves
 
     m_action = model_action()
     m_coords = model_coordinates()
+
 
     if time_str:
         load_state_top10(time_str)
         m_action, m_coords = load_state_models(time_str)
 
     loss_function = tf.keras.losses.Huber(delta=1.0, reduction=losses_utils.ReductionV2.AUTO)
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0000025, clipnorm=.5)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.00025, clipnorm=.5)
 
     with open("ra.pckl", 'rb') as hd:
         ls_ra = pickle.load(hd)
@@ -302,29 +308,46 @@ if __name__ == '__main__':
         action_input = []
         coord_input = []
         score_history = []
+        movetaker = 0
 
         i = 1
+        if top_10_games[0][0] < 0:
+            choice = 0.1
+        else:
+            choice = random.random()
         for r in g.yieldloop():
             print("\t %s \t %s \t %s " % (j, i, s.get_score()))
             predict_key, coords = '-', None
+            predict_key_position = None
+            moveTaken = False
 
-            if i < 10:
+
+            if i < 11:
                 # TODO: Use epsilon-greedy for exploration
-                if random.random() > 0.55: # 80% best player / random moves
-                    predict_key, coords = get_best_player_move_randomized(s, i)
-                    print("random %s %s"%(predict_key, coords))
+                if top_10_games[-1][0] > 0:
+                    if choice > .95:
+                        predict_key, _, coords = top_10_games[-1][1][i]
+                        print("best %s %s"%(predict_key, coords))
+                        moveTaken = True
+                        movetaker = 1
+                    elif choice > .70:
+                        predict_key, coords = get_best_player_move_randomized(s, i)
+                        print("random %s %s"%(predict_key, coords))
+                        moveTaken = True
+                        movetaker = 2
 
+                if predict_key is not None and predict_key_position is None:
                     for ijk in range(5):
                         if all_keys_model[ijk] == predict_key:
                             building = tf.one_hot(ijk, 5)
                             predict_key_position = ijk
 
-                else:
+                if not moveTaken:
                     prediction = m_action.predict(state_representation_vector(s, old_gambled_states))
 
                     old_gambled_states.append(prediction[0][:10])
                     del old_gambled_states[0]
-
+                    #print(prediction)
                     move = prediction[0][10:]
                     predict_key_position = np.argmax(move)
                     predict_key = all_keys_model[predict_key_position]
@@ -343,7 +366,7 @@ if __name__ == '__main__':
 
                     s.add_game_event(GameEvent.CONSTRUCT_BUILDING, (coords, key_to_building[predict_key]))
 
-            print(" predicted %s %s"%(predict_key, coords))
+            print(" taken %s %s"%(predict_key, coords))
 
             action_input.append(state_representation_vector(s, old_gambled_states)[0])
             if predict_key and predict_key != '-':
@@ -403,9 +426,13 @@ if __name__ == '__main__':
                 lowest = min((sc[0],it) for it, sc in enumerate(top_10_games))
                 if lowest[0] < score_history[-1] and score_history[-1] not in [sc[0] for sc in top_10_games]:
                     del top_10_games[lowest[1]]
-                    top_10_games.append((score_history[-1], action_history[:10]))
+                    top_10_games.append((score_history[-1], action_history[:11]))
                     top_10_games.sort()
 
+                with open('models/training_score_%s.csv'%(time_str), 'w', newline='') as csvfile:
+
+                    csvwriter = csv.writer(csvfile, delimiter=';')
+                    csvwriter.writerow([j, movetaker, score_history[-1], action_history[:10]])
 
                 state_history = [] #state_history[-20:]
                 action_history = [] #action_history[-20:]
