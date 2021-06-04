@@ -1,4 +1,8 @@
 # TODO
+- train 2 network model without old - state (and look at old state)
+- one network per building -> one network for composition -0 LSTM like convergance 
+
+
 - building config should contain production speed etc.
 - man muss noch iwie nen gewinn kriterium und score festlegen -> fewest ticks/ most ressources left
 - ui/game/state muessen gut getrennt sein, zum ai spiele generien
