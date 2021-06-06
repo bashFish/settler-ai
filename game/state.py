@@ -12,11 +12,13 @@ buildings, _, _ = parse_buildings()
 rows = 50
 cols = 50
 
+
 from abc import ABC, abstractmethod
 class Building(ABC):
     @abstractmethod
     def process_tick(self):
         pass
+
 
 #TODO: evnt queue
 #TODO: wie heisst da paradigma fuer buildingqueue/process tick?
@@ -26,12 +28,15 @@ class State(object):
         with open('config/initial_state.json') as fp:
             self.state_dict = json.load(fp)
 
+        self.produced_dict = {'wood': 0, 'plank': 0}
+
         self._ui_events = []
         self._game_events = []
 
         self.tick = 0
         self.latest_state_tick = 0
 
+        self.cut_wood = 0
         self.landscape_occupation = np.zeros((rows, cols), np.int)
         self.landscape_resource_amount = np.zeros((rows, cols), np.int)
         self.owned_terrain = np.zeros((rows, cols), np.int)
@@ -88,13 +93,13 @@ class State(object):
 
     def acquireMaterial(self, material):
         self.state_dict[material] -= 1
-        self.state_dict["consumed_%s"%(material)] += 1
+        #self.state_dict["consumed_%s"%(material)] += 1
         self.availableCarrier -= 1
         return material
 
     def addMaterial(self, material):
         self.state_dict[material] += 1
-        self.state_dict["produced_%s"%(material)] += 1
+        self.produced_dict[material] += 1
         self.availableCarrier -= 1
 
     def check_coordinates_buildable(self, coordinate):
@@ -180,8 +185,11 @@ class State(object):
     def get_num_constructions(self):
         return len([b for b in self.buildings if b.finished == False])
 
+    # cut wood + explore is the objective
+    #TODO: later: drop buildings
+    # +self.state_dict['plank']*10+self.state_dict['wood']*5 #-(self.settler_score_penalty>>1)
     def get_score(self):
-        return np.sum(self.owned_terrain)*3+self.state_dict['produced_plank']*100+self.state_dict['produced_wood']*50-(self.settler_score_penalty>>1)
+        return np.sum(self.owned_terrain)*2 + self.produced_dict['plank']*5 - self.tick
 
     # TODO: seems like only proper methods are shareable thru process/manager :/
     def get_ticks(self):

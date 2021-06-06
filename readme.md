@@ -1,4 +1,16 @@
 # TODO
+- do Policy iteration
+- curiosity driven reward function
+- BOHB architecture finding
+  
+- increase number working ticks for carrier/ woodcutter according to distance
+- add productivity of buildings
+- refactor game code
+- add 'change statistic' e.g. produced wood, buildings etc
+- use lstm/ transformer
+- to gameover or not to gameover
+
+  
 - train 2 network model without old - state (and look at old state)
 - one network per building -> one network for composition -0 LSTM like convergance 
 
