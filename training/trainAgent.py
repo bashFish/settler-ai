@@ -1,4 +1,3 @@
-import copy
 
 from tensorflow.python.keras.utils import losses_utils
 
@@ -8,57 +7,39 @@ from state import State
 
 from model_misc import *
 from game_misc import *
+from training.DQNAgent import DQNAgent, RandomAgent
 from training_misc import *
 
 
-num_games = 1000
-observed_moves_per_game = 20
-moves_per_game = 6
 
-buildings, key_to_building, objectid_to_building = parse_buildings()
-rows, cols = 50, 50
-
-all_keys = list(key_to_building.keys())
-all_keys.extend(['-']) # for now don't demolish building/ end game  ['d', 'q', '-']
 
 
 if __name__ == '__main__':
 
-    m_action = model_action()
-    m_coords = model_coordinates()
+    environment_data = load_environment_data()
 
-    with open("ra.pckl", 'rb') as hd:
-        ls_ra = pickle.load(hd)
+    random_agent = RandomAgent(0.8)
+    agent = DQNAgent()
 
-    with open("occ.pckl" , 'rb') as hd:
-        ls_occ = pickle.load(hd)
-
-    with open("building.pckl" , 'rb') as hd:
-        building_pos = pickle.load(hd)
-
-    for game_nr in range(num_games):
+    for game_nr in range(NUM_EPISODES):
         print("\tgame %s" % (game_nr))
 
-        s = State()
-        g = Control(s, copy.deepcopy(ls_ra), copy.deepcopy(ls_occ), copy.deepcopy(building_pos))
+        state, control = instanciate_environment(*environment_data)
 
+        game_move_nr = 0
+        for _ in control.yieldloop():
+            game_move_nr += 1
 
+            if game_move_nr < NUM_EPISODE_HORIZON_CONTROLLED:
+
+                action = agent.get_action(state)
+
+                if action:
+                    state.add_game_event(action)
+
+            if game_move_nr >= NUM_EPISODE_HORIZON_OBSERVED:
+                break
 """
-
-        # Creating the dense layers:
-        for d in dense_list:
-            _ = Dense(units=d, activation='relu')(_)
-        # The output layer has 5 nodes (one node per action)
-        output = Dense(units=self.env.ACTION_SPACE_SIZE,
-                          activation='linear', name='output')(_)
-        
-        # Put it all together:
-        model = Model(inputs=input_layer, outputs=[output])
-        model.compile(optimizer=Adam(lr=0.001),
-                      loss={'output': 'mse'},
-                      metrics={'output': 'accuracy'})
-                  
-                  
                   
 1- Initialize replay memory capacity.
 2- Initialize the policy network with random weights.

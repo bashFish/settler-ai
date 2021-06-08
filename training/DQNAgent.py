@@ -1,90 +1,66 @@
-from collections import deque
+import random
+import numpy as np
+from events import GameEvent
+from misc import parse_buildings
+from training.model_misc import model_action, model_coordinates
+from abc import ABC, abstractmethod
 
 
-class DQNAgent:
-    def __init__(self, name, env, conv_list, dense_list, util_list):
-        self.env = env
-        self.conv_list = conv_list
-        self.dense_list = dense_list
-        self.name = [str(name) + " | " + "".join(str(c) + "C | " for c in conv_list) + "".join(
-            str(d) + "D | " for d in dense_list) + "".join(u + " | " for u in util_list)][0]
+class Agent(ABC):
 
-        # Main model
-        self.model = self.create_model(self.conv_list, self.dense_list)
+    def __init__(self):
+        self.buildings, self.key_to_building, self.objectid_to_buildings = parse_buildings()
 
-        # Target network
-        self.target_model = self.create_model(self.conv_list, self.dense_list)
-        self.target_model.set_weights(self.model.get_weights())
+        self.building_keys = list(self.key_to_building.keys())
 
-        # An array with last n steps for training
-        self.replay_memory = deque(maxlen=REPLAY_MEMORY_SIZE)
+    @abstractmethod
+    def get_action(self, state):
+        pass
 
-        # Custom tensorboard object
-        self.tensorboard = ModifiedTensorBoard(name, log_dir="{}logs/{}-{}".format(PATH, name, int(time.time())))
 
-        # Used to count when to update target network with main network's weights
-        self.target_update_counter = 0
+class RandomAgent(Agent):
 
-    # Adds step's data to a memory replay array
-    # (observation space, action, reward, new observation space, done)
-    def update_replay_memory(self, transition):
-        self.replay_memory.append(transition)
+    def __init__(self, construct_probability):
+        super().__init__()
+        self.construct_probability = construct_probability
 
-    # Trains main network every step during episode
-    def train(self, terminal_state, step):
-        # Start training only if certain number of samples is already saved
-        if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
-            return
+    def get_action(self, state):
 
-        # Get a minibatch of random samples from memory replay table
-        minibatch = random.sample(self.replay_memory, MINIBATCH_SIZE)
+        action_category = random.random()
+        action = None
 
-        # Get current states from minibatch, then query NN model for Q values
-        current_states = np.array([transition[0] for transition in minibatch])
-        current_qs_list = self.model.predict(current_states.reshape(-1, *env.ENVIRONMENT_SHAPE))
+        """ TODO: no delete yet
+        if action_category < .05 and False: 
+            b = random.choice(state.buildings)
+            action = (GameEvent.DROP, (b.coordinate))
+        """
 
-        # Get future states from minibatch, then query NN model for Q values
-        # When using target network, query it, otherwise main network should be queried
-        new_current_states = np.array([transition[3] for transition in minibatch])
-        future_qs_list = self.target_model.predict(new_current_states.reshape(-1, *env.ENVIRONMENT_SHAPE))
+        if action_category > self.construct_probability:
+            key = random.choice(self.building_keys)
 
-        X = []
-        y = []
+            available_positions = np.stack(np.where(state.get_owned_terrain() == 1)).transpose()
+            while True:
+                coordinates = random.choice(available_positions)
+                if state.check_coordinates_buildable(coordinates):
+                    break
 
-        # Now we need to enumerate our batches
-        for index, (current_state, action, reward, new_current_state, done) in enumerate(minibatch):
+            action = (GameEvent.CONSTRUCT_BUILDING, (coordinates, self.key_to_building[key]))
 
-            # If not a terminal state, get new q from future states, otherwise set it to 0
-            # almost like with Q Learning, but we use just part of equation here
-            if not done:
-                max_future_q = np.max(future_qs_list[index])
-                new_q = reward + DISCOUNT * max_future_q
-            else:
-                new_q = reward
+        return action
 
-            # Update Q value for given state
-            current_qs = current_qs_list[index]
-            current_qs[action] = new_q
 
-            # And append to our training data
-            X.append(current_state)
-            y.append(current_qs)
 
-        # Fit on all samples as one batch, log only on terminal state
-        self.model.fit(x=np.array(X).reshape(-1, *env.ENVIRONMENT_SHAPE),
-                       y=np.array(y),
-                       batch_size=MINIBATCH_SIZE, verbose=0,
-                       shuffle=False, callbacks=[self.tensorboard] if terminal_state else None)
+class DQNAgent(Agent):
+    def __init__(self):
+        m_action = model_action()
+        m_coords = model_coordinates()
 
-        # Update target network counter every episode
-        if terminal_state:
-            self.target_update_counter += 1
+    def update_environment(self):
+        pass
 
-        # If counter reaches set value, update target network with weights of main network
-        if self.target_update_counter > UPDATE_TARGET_EVERY:
-            self.target_model.set_weights(self.model.get_weights())
-            self.target_update_counter = 0
+    def predict(self):
+        prediction = m_action.predict(state_representation_vector(s, old_gambled_states))
+        prediction_2 = m_coords.predict(state_representation_vector_2(s, old_gambled_states, building))
 
-    # Queries main network for Q values given current observation space (environment state)
-    def get_qs(self, state):
-        return self.model.predict(state.reshape(-1, *env.ENVIRONMENT_SHAPE))
+        coords = prediction_to_coords(prediction_2[0])
+        GameEvent.CONSTRUCT_BUILDING, (coords, key_to_building[predict_key])

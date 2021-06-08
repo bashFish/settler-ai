@@ -7,7 +7,7 @@ from building.woodcutter import WoodcutterFactory
 class Factory:
     def __init__(self, config):
         self.config = config
-        print(config)
+        #print(config)
         self.barack_factory = BarackFactory(self.config['Barack'])
         self.sawmill_factory = SawmillFactory(self.config['Sawmill'])
         self.storehouse_factory = StorehouseFactory(self.config['Storehouse'])

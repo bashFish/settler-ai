@@ -53,9 +53,9 @@ class State(object):
         self._game_events.append((event, data))
 
     def add_ui_event(self, event, data=None):
-        print("before" + str(data))
+        #print("before" + str(data))
         self._ui_events.append((event, data))
-        print("after")
+        #print("after")
 
     def fetch_reset_ui_events(self):
         if not self._ui_events:
