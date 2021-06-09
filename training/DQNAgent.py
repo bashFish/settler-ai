@@ -1,66 +1,161 @@
+from collections import deque
 import random
+import time
 import numpy as np
+
 from events import GameEvent
 from misc import parse_buildings
-from training.model_misc import model_action, model_coordinates
+from training.ModifiedTensorBoard import ModifiedTensorBoard
+from training.game_misc import is_state_dead_end
+from training.model_misc import model_action
 from abc import ABC, abstractmethod
+
+from training.training_misc import NUM_EPISODE_HORIZON_CONTROLLED, TRAIN_MIN_REPLAY_MEMORY_SIZE, TRAIN_MINIBATCH_SIZE, \
+    TRAIN_UPDATE_TARGET_STEPS, TRAIN_MODEL_NAME, TRAIN_MEMORY_SIZE
 
 
 class Agent(ABC):
-
     def __init__(self):
         self.buildings, self.key_to_building, self.objectid_to_buildings = parse_buildings()
-
         self.building_keys = list(self.key_to_building.keys())
 
+        self.current_episode_trajectories = []
+        self.replay_memory = None
+
+    def append_trajectory(self, trajectory):
+        self.current_episode_trajectories.append(trajectory)
+
     @abstractmethod
-    def get_action(self, state):
+    def choose_action(self, state, environment):
+        pass
+
+    @abstractmethod
+    def train(self):
+        pass
+
+    @abstractmethod
+    def end_episode(self):
         pass
 
 
 class RandomAgent(Agent):
-
-    def __init__(self, construct_probability):
+    def __init__(self, expectation):
         super().__init__()
-        self.construct_probability = construct_probability
-
-    def get_action(self, state):
-
-        action_category = random.random()
-        action = None
-
-        """ TODO: no delete yet
-        if action_category < .05 and False: 
-            b = random.choice(state.buildings)
-            action = (GameEvent.DROP, (b.coordinate))
-        """
-
-        if action_category > self.construct_probability:
-            key = random.choice(self.building_keys)
-
-            available_positions = np.stack(np.where(state.get_owned_terrain() == 1)).transpose()
-            while True:
-                coordinates = random.choice(available_positions)
-                if state.check_coordinates_buildable(coordinates):
-                    break
-
-            action = (GameEvent.CONSTRUCT_BUILDING, (coordinates, self.key_to_building[key]))
-
-        return action
-
 
 
 class DQNAgent(Agent):
-    def __init__(self):
-        m_action = model_action()
-        m_coords = model_coordinates()
+    def __init__(self, discount_factor, reward_lookahead):
+        super().__init__()
 
-    def update_environment(self):
-        pass
+        self.replay_memory = deque(maxlen=TRAIN_MEMORY_SIZE)
+        self.discount_factor = discount_factor
+        self.reward_lookahead = reward_lookahead
 
-    def predict(self):
-        prediction = m_action.predict(state_representation_vector(s, old_gambled_states))
-        prediction_2 = m_coords.predict(state_representation_vector_2(s, old_gambled_states, building))
+        self.current_action_model = model_action(0.001)
+        self.target_action_model = model_action(0.001)
+        self.current_update_counter = 0
 
-        coords = prediction_to_coords(prediction_2[0])
-        GameEvent.CONSTRUCT_BUILDING, (coords, key_to_building[predict_key])
+        self.tensorboard = ModifiedTensorBoard(TRAIN_MODEL_NAME, log_dir="logs/{}-{}".format(TRAIN_MODEL_NAME, int(time.time())))
+
+
+    #TODO: later don't take entire episode but only recent X moves + Y sampled moves from before
+    def get_memory_from_current_episode(self):
+        #computes reward from score (or dead end)
+        # returns [[ state action nextstate reward ]_i for i]
+
+        # 1st case: dead end -> rate entire X steps from trajectory with discount 'as bad'
+        if is_state_dead_end(self.current_episode_trajectories[-1][1], self.buildings):
+            last_good_index = len(self.current_episode_trajectories) - 2
+            while last_good_index > 0:
+                if not is_state_dead_end(self.current_episode_trajectories[last_good_index][1], self.buildings):
+                    break
+                last_good_index -= 1
+
+            episode_rewards = [0] * len(last_good_index)
+            current_index = last_good_index - 1
+            episode_rewards[current_index] = -1
+            for _ in range(last_good_index-1):
+                current_index -= 1
+                episode_rewards[current_index] = episode_rewards[current_index+1]*self.discount_factor
+
+            return [list(self.current_episode_trajectories[i][1:])+[episode_rewards[i], 0] for i in range(last_good_index)]
+
+        # 2nd case: bellmann equation:
+        resultset = []
+        for i in range(NUM_EPISODE_HORIZON_CONTROLLED):
+            resultset.append(list(self.current_episode_trajectories[i][1:]) +
+                [sum([(self.current_episode_trajectories[1+j+i][0]-self.current_episode_trajectories[j+i][0])*self.discount_factor**j for j in range(self.reward_lookahead)]), 1])
+        return resultset
+
+
+    def end_episode(self):
+        self.replay_memory.extend(self.get_memory_from_current_episode())
+        self.current_episode_trajectories = []
+
+    def choose_action(self, state):
+
+        action_index = np.argmax(self.current_action_model.predict(self.state_to_model_input(state)))
+
+        if action_index == 4:
+            return None
+
+        building = self.key_to_building[self.building_keys[action_index]]
+
+        return (GameEvent.CONSTRUCT_BUILDING,
+                (self.choose_cell_on_creation_action(state, building), building))
+
+    def _action_key_to_index(self, key):
+        if key is None:
+            return 4
+        return self.building_keys.index(self.buildings[key[1][1]]['key'])
+
+    def choose_cell_on_creation_action(self, state, building):
+
+        possible = np.where(state[0][2] == 1) #owned terrain
+        position = random.randint(0, len(possible[0])-1)
+
+        return possible[0][position], possible[1][position]
+
+    def state_list_to_model_input(self, state_list, index):
+        tmp = [self.state_to_model_input(trajectory[index]) for trajectory in state_list]
+        return {'map_state': np.vstack([t['map_state'] for t in tmp]),
+                'statistic_state': np.vstack([t['statistic_state'] for t in tmp])}
+
+    def state_to_model_input(self, state):
+        return {'map_state': np.stack([state[0]]),
+                'statistic_state': np.array([list(state[1].values()) + list(state[2:])])}
+
+    def train(self):
+        if len(self.replay_memory) < TRAIN_MIN_REPLAY_MEMORY_SIZE:
+            return
+
+        minibatch = random.sample(self.replay_memory, TRAIN_MINIBATCH_SIZE)
+
+        current_states = self.state_list_to_model_input(minibatch, 0)
+        current_qs_list = self.current_action_model.predict(current_states)
+
+        next_current_states =  self.state_list_to_model_input(minibatch, 2)
+        future_qs_list = self.target_action_model.predict(next_current_states)
+
+        X = []
+        y = []
+
+        map_states = []
+        for index, (current_state, action, new_current_state, reward, flexible_reward) in enumerate(minibatch):
+
+            if flexible_reward:
+                max_future_q = np.max(future_qs_list[index])
+                reward += self.discount_factor * max_future_q
+
+            current_qs = current_qs_list[index]
+            current_qs[self._action_key_to_index(action)] = reward
+
+            y.append(current_qs)
+
+        self.current_action_model.fit(current_states, np.array(y), batch_size=TRAIN_MINIBATCH_SIZE,
+                       verbose=0, shuffle=False, callbacks=[self.tensorboard])
+
+        self.current_update_counter += 1
+        if self.current_update_counter > TRAIN_UPDATE_TARGET_STEPS:
+            self.target_action_model.set_weights(self.current_action_model.get_weights())
+            self.current_update_counter = 0

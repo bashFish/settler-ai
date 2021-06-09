@@ -1,4 +1,4 @@
-from tensorboard.program import TensorBoard
+from tensorflow.keras.callbacks import TensorBoard
 import tensorflow as tf
 import os
 
@@ -13,7 +13,15 @@ class ModifiedTensorBoard(TensorBoard):
 
     # Overriding this method to stop creating default log writer
     def set_model(self, model):
-        pass
+        self.model = model
+
+        self._train_dir = os.path.join(self._log_write_dir, 'train')
+        self._train_step = self.model._train_counter
+
+        self._val_dir = os.path.join(self._log_write_dir, 'validation')
+        self._val_step = self.model._test_counter
+
+        self._should_write_train_graph = False
 
     # Overrided, saves logs with our step number
     # (otherwise every .fit() will start writing from 0th step)

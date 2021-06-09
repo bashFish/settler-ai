@@ -1,45 +1,74 @@
 import tensorflow as tf
 import numpy as np
+import copy
+from tensorflow.keras.optimizers import Adam
 
 from building.sawmill import Sawmill
 from building.woodcutter import Woodcutter
 
 
-def state_representation(state):
-    #TODO: later include
-    #   state.availableCarrier,
-    #   state.settler_score_penalty]
-    return list(state.state_dict.values()) + np.sum(state.owned_terrain) + list(state.produced_dict.values()) + \
-           [sum([1 for s in state.buildings if s == Sawmill and s.finished == True]),
-            sum([1 for s in state.buildings if s == Sawmill and s.finished == False]),
-            sum([1 for s in state.buildings if s == Woodcutter and s.finished == True]),
-            sum([1 for s in state.buildings if s == Woodcutter and s.finished == False])]
+def extract_state(environment):
+    #TODO: do i need to convert that to binary masks? guess so :/
+    return ([copy.deepcopy(x) for x in (environment.landscape_occupation,
+             environment.landscape_resource_amount,
+             environment.owned_terrain)],
+            copy.deepcopy(environment.state_dict),
+            sum([1 for b in environment.buildings if b.finished is False]),
+            sum([1 for b in environment.buildings if b.finished is True and b == Sawmill]),
+            sum([1 for b in environment.buildings if b.finished is True and b == Woodcutter]),
+            sum([1 for b in environment.buildings if b.finished is False and b == Sawmill]),
+            sum([1 for b in environment.buildings if b.finished is False and b == Woodcutter]),
+            )
 
-def statemap_to_model_input(state):
-    # state.owned_terrain           # 0/1
-    # state.landscape_occupation    # 8 is wood, woodcutter: +/- 3, barack: +/- 6, other: occupied
-    return np.stack([state.owned_terrain, state.landscape_occupation != 0, state.landscape_occupation == 8,
-                     np.abs(state.landscape_occupation) == 3, np.abs(state.landscape_occupation) == 6])
+def model_action(learning_rate):
+    map_input = tf.keras.Input(shape=(3,50,50), name='map_state')
+    x = tf.keras.layers.Conv2D(32, 2, padding="same", activation='relu')(map_input)
+    x = tf.keras.layers.MaxPool2D(3)(x)
+    x = tf.keras.layers.Conv2D(32, 2, padding="same", activation='relu')(map_input)
+    x = tf.keras.layers.MaxPool2D(3)(x)
 
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(150, activation='relu')(x)
+    x = tf.keras.layers.Dense(50, activation='relu')(x)
+    x = tf.keras.Model(inputs=map_input, outputs=x)
 
-def model_action():
+    statistic_input = tf.keras.Input(shape=(5+5), name='statistic_state')
+    y = tf.keras.layers.Dense(50, activation='relu')(statistic_input)
+    y = tf.keras.Model(inputs=statistic_input, outputs=y)
+
+    model = tf.keras.layers.Concatenate()([x.output, y.output])
+    model = tf.keras.layers.Dense(150, activation='relu')(model)
+    model = tf.keras.layers.Dense(50, activation='relu')(model)
+
+    #TODO: remove should be handled somewhat different
+    model = tf.keras.layers.Dense(5, activation='linear', #TODO: not linear - what did i have before?
+        kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
+        bias_regularizer=tf.keras.regularizers.l2(1e-4),
+        activity_regularizer=tf.keras.regularizers.l1(1e-3))(model)
+
+    model = tf.keras.Model(inputs=[x.input, y.input], outputs=model)
+    #TODO: loss should be should be RSM rather? but i also train somewhat different here
+    model.compile(loss="mse", optimizer=Adam(lr=learning_rate), metrics=['accuracy'])
+    return model
+
+def model_action_2():
     map = tf.keras.models.Sequential()
-    map.add(tf.keras.Input(shape=(50,50,5)))
+    map.add(tf.keras.layers.InputLayer(input_shape=(50,50,3), name='map_state'))
     map.add(tf.keras.layers.Conv2D(32, (3, 3), padding="same", activation='relu'))
     map.add(tf.keras.layers.Dense(50, activation='relu'))
     map.add(tf.keras.layers.Dense(50, activation='relu'))
 
     dictionary = tf.keras.models.Sequential()
-    dictionary.add(tf.keras.Input(shape=(12+3)))
+    dictionary.add(tf.keras.layers.InputLayer(input_shape=(5+5), name='statistic_state'))
     dictionary.add(tf.keras.layers.Dense(50, activation='relu'))
 
     model = tf.keras.models.Sequential()
-    model.add(tf.keras.layers.Concatenate()([map, dictionary]))
+    model.add(tf.keras.layers.Concatenate([map, dictionary]))
     model.add(tf.keras.layers.Dense(150, activation='relu'))
     model.add(tf.keras.layers.Dense(50, activation='relu'))
 
     #TODO: remove should be handled somewhat different
-    model.add(tf.keras.layers.Dense(5, activation='linear',
+    model.add(tf.keras.layers.Dense(5, activation='linear', #TODO: not linear - what did i have before?
         kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
         bias_regularizer=tf.keras.regularizers.l2(1e-4),
         activity_regularizer=tf.keras.regularizers.l1(1e-3)))

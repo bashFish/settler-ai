@@ -36,7 +36,6 @@ class Environment(object):
         self.tick = 0
         self.latest_state_tick = 0
 
-        self.cut_wood = 0
         self.landscape_occupation = np.zeros((rows, cols), np.int)
         self.landscape_resource_amount = np.zeros((rows, cols), np.int)
         self.owned_terrain = np.zeros((rows, cols), np.int)
@@ -188,8 +187,9 @@ class Environment(object):
     # cut wood + explore is the objective
     #TODO: later: drop buildings
     # +self.state_dict['plank']*10+self.state_dict['wood']*5 #-(self.settler_score_penalty>>1)
+    # cut all wood
     def get_score(self):
-        return np.sum(self.owned_terrain)*2 + self.produced_dict['plank']*5 - self.tick
+        return -np.sum(self.landscape_resource_amount[np.where(self.landscape_occupation == 8)])
 
     # TODO: seems like only proper methods are shareable thru process/manager :/
     def get_ticks(self):
