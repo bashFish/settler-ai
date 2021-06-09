@@ -98,9 +98,9 @@ class Ui:
     # ------------------------------------------------------------------
     # TODO: in java would only get a very shallow view-interface!
     #     but there are too many object informations that would need inference
-    def __init__(self, gamestate):
+    def __init__(self, environment):
 
-        self._state = gamestate
+        self._environment = environment
 
         self.window = Tk()
         self.window.title("Settler-UI")
@@ -125,7 +125,7 @@ class Ui:
             )
 
     def refresh_entire_gamestate(self):
-        ls_occ = self._state.get_landscape_occupation()
+        ls_occ = self._environment.get_landscape_occupation()
         occupied = np.where(ls_occ > 0)
         for x, y in zip(occupied[0], occupied[1]):
 
@@ -136,7 +136,7 @@ class Ui:
         if self._terrain_canvas:
             self.canvas.delete(self._terrain_canvas)
 
-        owned_terrain = self._state.get_owned_terrain().astype(np.int16) #TODO: move this conversion somewhere
+        owned_terrain = self._environment.get_owned_terrain().astype(np.int16) #TODO: move this conversion somewhere
 
         result = rasterio.features.shapes(owned_terrain)
         polygon = next(result)
@@ -212,7 +212,7 @@ class Ui:
             ))
 
     def display_gameover(self):
-        score = self._state.get_score()
+        score = self._environment.get_score()
         self.canvas.delete("all")
         score_text = "you scored \n"
         self.canvas.create_text(
@@ -308,7 +308,7 @@ class Ui:
         if self._stats_canvas:
             self.canvas.delete(self._stats_canvas)
 
-        state_dict = self._state.get_state_dict()
+        state_dict = self._environment.get_state_dict()
         #TODO: should rather be accessed thru keys
         gamestats = "settler: %i  wood: %i  plank: %i\n carrier: %i/ free: %i" % (state_dict['settler'], state_dict['wood'], state_dict['plank'],
                                                                                 state_dict['carrier'], state_dict['freeCarrier'])
@@ -326,7 +326,7 @@ class Ui:
         if self._ticks_canvas:
             self.canvas.delete(self._ticks_canvas)
 
-        tick = "tick: %i/ %i\nscore: %s" % (*self._state.get_ticks(), self._state.get_score())
+        tick = "tick: %i/ %i\nscore: %s" % (*self._environment.get_ticks(), self._environment.get_score())
 
         self._ticks_canvas = self.canvas.create_text(
             size_of_board + 2,
@@ -346,22 +346,22 @@ class Ui:
         if cell:
             print(self._last_key_pressed)
             if self._last_key_pressed == 'd':
-                self._state.add_game_event(GameEvent.DROP, cell)
+                self._environment.add_game_event(GameEvent.DROP, cell)
             else:
-                self._state.add_game_event(GameEvent.CONSTRUCT_BUILDING, (cell, self.key_to_object(self._last_key_pressed)))
+                self._environment.add_game_event(GameEvent.CONSTRUCT_BUILDING, (cell, self.key_to_object(self._last_key_pressed)))
 
     def key_input(self, event):
         print("Keyboard: %s" % (event))
         if event.keysym == 'q':
-            self._state.add_game_event(GameEvent.END_GAME)
+            self._environment.add_game_event(GameEvent.END_GAME)
         if event.keysym in key_to_building or event.keysym in ['d']:
             self._last_key_pressed = event.keysym #KeyboardMap._value2member_map_[event.keysym]
-            self._state.add_ui_event(UiEvent.DRAW_KEYS)
+            self._environment.add_ui_event(UiEvent.DRAW_KEYS)
 
 
     def game_event_update(self):
         print("ui event loop")
-        for (e,d) in self._state.fetch_reset_ui_events():
+        for (e,d) in self._environment.fetch_reset_ui_events():
             if e == UiEvent.INIT:           #TODO: directly get/call the function name or sth
                 self.refresh_entire_gamestate()
             if e == UiEvent.DRAW_DASHBOARD:

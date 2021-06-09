@@ -22,7 +22,7 @@ class Building(ABC):
 
 #TODO: evnt queue
 #TODO: wie heisst da paradigma fuer buildingqueue/process tick?
-class State(object):
+class Environment(object):
     def __init__(self):
         #TODO: not best-practice to do io in constructor
         with open('config/initial_state.json') as fp:
@@ -41,7 +41,7 @@ class State(object):
         self.landscape_resource_amount = np.zeros((rows, cols), np.int)
         self.owned_terrain = np.zeros((rows, cols), np.int)
 
-        #TODO: are these state or to be moved to game?
+        #TODO: are these environment or to be moved to game?
         buildings_conf, _, _ = parse_buildings()
         self._building_factory = Factory(buildings_conf)
         self.buildings = []
@@ -73,7 +73,7 @@ class State(object):
         self._game_events = []
         return events
 
-    #TODO: should this be in game rather than state?
+    #TODO: should this be in game rather than environment?
     def increment_tick(self):
         self.availableCarrier = self.state_dict['carrier']
         self.tick += 1
