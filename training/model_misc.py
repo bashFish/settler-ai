@@ -51,38 +51,12 @@ def model_action(learning_rate):
     model.compile(loss="mse", optimizer=Adam(lr=learning_rate), metrics=['accuracy'])
     return model
 
-def model_action_2():
-    map = tf.keras.models.Sequential()
-    map.add(tf.keras.layers.InputLayer(input_shape=(50,50,3), name='map_state'))
-    map.add(tf.keras.layers.Conv2D(32, (3, 3), padding="same", activation='relu'))
-    map.add(tf.keras.layers.Dense(50, activation='relu'))
-    map.add(tf.keras.layers.Dense(50, activation='relu'))
 
-    dictionary = tf.keras.models.Sequential()
-    dictionary.add(tf.keras.layers.InputLayer(input_shape=(5+5), name='statistic_state'))
-    dictionary.add(tf.keras.layers.Dense(50, activation='relu'))
-
-    model = tf.keras.models.Sequential()
-    model.add(tf.keras.layers.Concatenate([map, dictionary]))
-    model.add(tf.keras.layers.Dense(150, activation='relu'))
-    model.add(tf.keras.layers.Dense(50, activation='relu'))
-
-    #TODO: remove should be handled somewhat different
-    model.add(tf.keras.layers.Dense(5, activation='linear', #TODO: not linear - what did i have before?
-        kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
-        bias_regularizer=tf.keras.regularizers.l2(1e-4),
-        activity_regularizer=tf.keras.regularizers.l1(1e-3)))
-
-    #model.summary()
-    return model
-
-
-#TODO: one for each building?
 #TODO: could also insert map in multiple layers (wood/ woodcutter/ ...) = embedding
 #TODO: use deconvolutional -> generate heat map here?
 def model_coordinates():
     map = tf.keras.models.Sequential()
-    map.add(tf.keras.Input(shape=(50,50,5)))
+    map.add(tf.keras.Input(shape=(3,50,50)))
     map.add(tf.keras.layers.Conv2D(32, (3, 3), padding="same", activation='relu'))
     map.add(tf.keras.layers.Conv2D(32, (3, 3), padding="same", activation='relu'))
     map.add(tf.keras.layers.Dropout(.1))

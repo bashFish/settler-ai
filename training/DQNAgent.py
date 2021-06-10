@@ -7,7 +7,7 @@ from events import GameEvent
 from misc import parse_buildings
 from training.ModifiedTensorBoard import ModifiedTensorBoard
 from training.game_misc import is_state_dead_end
-from training.model_misc import model_action
+from training.model_misc import model_action, model_coordinates, prediction_to_coords
 from abc import ABC, abstractmethod
 
 from training.training_misc import NUM_EPISODE_HORIZON_CONTROLLED, TRAIN_MIN_REPLAY_MEMORY_SIZE, TRAIN_MINIBATCH_SIZE, \
@@ -53,6 +53,8 @@ class DQNAgent(Agent):
 
         self.current_action_model = model_action(0.001)
         self.target_action_model = model_action(0.001)
+        self.current_coords_models = [model_coordinates() for i in range(self.building_keys)]
+        self.target_coords_models = [model_coordinates() for i in range(self.building_keys)]
         self.current_update_counter = 0
 
         self.tensorboard = ModifiedTensorBoard(TRAIN_MODEL_NAME, log_dir="logs/{}-{}".format(TRAIN_MODEL_NAME, int(time.time())))
@@ -104,16 +106,18 @@ class DQNAgent(Agent):
         return (GameEvent.CONSTRUCT_BUILDING,
                 (self.choose_cell_on_creation_action(state, building), building))
 
-    def _action_key_to_index(self, key):
+    def _action_to_index(self, key):
         if key is None:
             return 4
         return self.building_keys.index(self.buildings[key[1][1]]['key'])
 
     def choose_cell_on_creation_action(self, state, building):
+        current_coord_model = self.current_coords_models[self.building_keys.index(self.buildings[building]['key'])]
+        return prediction_to_coords(current_coord_model.predict(state[0]))
 
-        possible = np.where(state[0][2] == 1) #owned terrain
+    def choose_random_available_cell(self, state):
+        possible = np.where(state[0][2] == 1) # maps array / owned terrain = 1
         position = random.randint(0, len(possible[0])-1)
-
         return possible[0][position], possible[1][position]
 
     def state_list_to_model_input(self, state_list, index):
@@ -137,10 +141,7 @@ class DQNAgent(Agent):
         next_current_states =  self.state_list_to_model_input(minibatch, 2)
         future_qs_list = self.target_action_model.predict(next_current_states)
 
-        X = []
         y = []
-
-        map_states = []
         for index, (current_state, action, new_current_state, reward, flexible_reward) in enumerate(minibatch):
 
             if flexible_reward:
@@ -148,7 +149,15 @@ class DQNAgent(Agent):
                 reward += self.discount_factor * max_future_q
 
             current_qs = current_qs_list[index]
-            current_qs[self._action_key_to_index(action)] = reward
+            current_qs[self._action_to_index(action)] = reward
+
+            if action:
+                #TODO: how to update coord model? only got score :/
+                # positive -> keep, othw -> random ? or a best/selector chooser?
+                #TODO: just as with target, don't train coords and building at same time?
+                current_coord_model = self.current_coords_models[
+                    self.building_keys.index(self._action_to_index(action))]
+                current_coord_model.fit()
 
             y.append(current_qs)
 

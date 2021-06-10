@@ -21,7 +21,8 @@ dqn is reactive -> need sth for more reward?
 - warum braucht das netz die kompletten letzten 4 states, und nicht nur die letzten actions + aktuellen state?
 - one bayes network with different priors? + UAI for explaining it
 -> don't just put everything into a number! keep the structure you got!!! primitive discrimiation like ressources/mapping or different actors
-  
+- introduce text driven reasoning/ decision making (just for fun)
+ 
   HERE IAM state of art Fall 2017!
   What happened afterwards?
   
