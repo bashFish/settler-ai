@@ -47,8 +47,8 @@ if __name__ == '__main__':
 
         agent.end_episode()
         agent.train()
+
 """
-                  
 1- Initialize replay memory capacity.
 2- Initialize the policy network with random weights.
 3- Clone the policy network, and call it the target network (target_model).

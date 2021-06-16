@@ -141,6 +141,7 @@ class DQNAgent(Agent):
         next_current_states =  self.state_list_to_model_input(minibatch, 2)
         future_qs_list = self.target_action_model.predict(next_current_states)
 
+        #TODO: clip rewards
         y = []
         for index, (current_state, action, new_current_state, reward, flexible_reward) in enumerate(minibatch):
 
@@ -155,9 +156,10 @@ class DQNAgent(Agent):
                 #TODO: how to update coord model? only got score :/
                 # positive -> keep, othw -> random ? or a best/selector chooser?
                 #TODO: just as with target, don't train coords and building at same time?
-                current_coord_model = self.current_coords_models[
-                    self.building_keys.index(self._action_to_index(action))]
-                current_coord_model.fit()
+                #current_coord_model = self.current_coords_models[
+                #    self.building_keys.index(self._action_to_index(action))]
+                #current_coord_model.fit()
+                TODO: pick from random agent best move.
 
             y.append(current_qs)
 
