@@ -3,9 +3,11 @@ import json
 
 def parse_gameconf():
     #TODO: lookup thru env vars! -> use env or default
+    #TODO: parse for validity
     with open('config/game.json') as fp:
         gameconf = json.load(fp)
     return gameconf
+
 
 #TODO: parse the shit out of it! validate n put it in structures
 def parse_buildings():
@@ -31,6 +33,7 @@ def parse_buildings():
     assert len(build_keys) == len(set(build_keys))
 
     return buildings, key_to_building, objectid_to_building
+
 
 def parse_colors():
     with open('config/colors.json') as fp:

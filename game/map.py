@@ -3,6 +3,7 @@ import random
 rows = 50
 cols = 50
 
+
 # TODO: should be moved into environment!
 def initialize_map(landscape_occupation, landscape_resource_amount):
 
