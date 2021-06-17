@@ -6,8 +6,6 @@ from events import GameEvent
 
 
 class SawmillFactory(BuildingFactory):
-    def __init__(self, config):
-        self._config = config
 
     def instanciate(self, coordinate):
         return Sawmill(self._config, coordinate)

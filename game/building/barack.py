@@ -6,8 +6,6 @@ from events import GameEvent
 
 
 class BarackFactory(BuildingFactory):
-    def __init__(self, config):
-        self._config = config
 
     def instanciate(self, coordinate):
         return Barack(self._config, coordinate)

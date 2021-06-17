@@ -1,5 +1,13 @@
-class BuildingFactory:
-    pass
+from abc import ABC, abstractmethod
 
-class Building:
+
+class BuildingFactory(ABC):
+    def __init__(self, config):
+        self._config = config
+
+    @abstractmethod
+    def instanciate(self, coordinate):
+        pass
+
+class Building(ABC):
     pass

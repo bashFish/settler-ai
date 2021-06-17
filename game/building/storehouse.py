@@ -6,8 +6,6 @@ from events import GameEvent
 
 
 class StorehouseFactory(BuildingFactory):
-    def __init__(self, config):
-        self._config = config
 
     def instanciate(self, coordinate):
         return Storehouse(self._config, coordinate)

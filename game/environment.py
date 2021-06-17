@@ -3,7 +3,7 @@ import random
 
 import numpy as np
 
-from building.factory import Factory
+from building.actualbuildingfactory import ActualBuildingFactory
 from misc import parse_buildings
 from events import UiEvent
 
@@ -42,7 +42,7 @@ class Environment(object):
 
         #TODO: are these environment or to be moved to game?
         buildings_conf, _, _ = parse_buildings()
-        self._building_factory = Factory(buildings_conf)
+        self._building_factory = ActualBuildingFactory(buildings_conf)
         self.buildings = []
         self.availableCarrier = 0
 
