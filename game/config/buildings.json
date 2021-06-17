@@ -20,6 +20,7 @@
       "ticks": 3,
       "good": "wood"
     },
+    "searchradius": 6,
     "objectid": 3
   },
   "Sawmill":{
