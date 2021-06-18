@@ -25,7 +25,7 @@ class Building(ABC):
 class Environment(object):
     def __init__(self):
         #TODO: not best-practice to do io in constructor
-        with open('config/initial_state.json') as fp:
+        with open('../config/initial_state.json') as fp:
             self.state_dict = json.load(fp)
 
         self.produced_dict = {'wood': 0, 'plank': 0}

@@ -2,6 +2,7 @@ import random
 from events import GameEvent
 import numpy as np
 
+
 #TODO: in theory/ later you can also get ressources dropping buildings
 def is_state_dead_end(state, buildings):
     for building_key in buildings:

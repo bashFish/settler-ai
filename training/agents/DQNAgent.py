@@ -4,43 +4,13 @@ import time
 import numpy as np
 
 from events import GameEvent
-from misc import parse_buildings
 from training.ModifiedTensorBoard import ModifiedTensorBoard
+from training.agents.Agent import Agent
 from training.game_misc import is_state_dead_end
-from training.model_misc import model_action, model_coordinates, prediction_to_coords
-from abc import ABC, abstractmethod
+from training.model_misc import model_action, model_coordinates, prediction_to_coords, extract_state
 
 from training.training_misc import NUM_EPISODE_HORIZON_CONTROLLED, TRAIN_MIN_REPLAY_MEMORY_SIZE, TRAIN_MINIBATCH_SIZE, \
     TRAIN_UPDATE_TARGET_STEPS, TRAIN_MODEL_NAME, TRAIN_MEMORY_SIZE
-
-
-class Agent(ABC):
-    def __init__(self):
-        self.buildings, self.key_to_building, self.objectid_to_buildings = parse_buildings()
-        self.building_keys = list(self.key_to_building.keys())
-
-        self.current_episode_trajectories = []
-        self.replay_memory = None
-
-    def append_trajectory(self, trajectory):
-        self.current_episode_trajectories.append(trajectory)
-
-    @abstractmethod
-    def choose_action(self, state, environment):
-        pass
-
-    @abstractmethod
-    def train(self):
-        pass
-
-    @abstractmethod
-    def end_episode(self):
-        pass
-
-
-class RandomAgent(Agent):
-    def __init__(self, expectation):
-        super().__init__()
 
 
 class DQNAgent(Agent):
@@ -94,8 +64,8 @@ class DQNAgent(Agent):
         self.replay_memory.extend(self.get_memory_from_current_episode())
         self.current_episode_trajectories = []
 
-    def choose_action(self, state):
-
+    def choose_action(self, environment):
+        state = extract_state(environment)
         action_index = np.argmax(self.current_action_model.predict(self.state_to_model_input(state)))
 
         if action_index == 4:
@@ -159,7 +129,8 @@ class DQNAgent(Agent):
                 #current_coord_model = self.current_coords_models[
                 #    self.building_keys.index(self._action_to_index(action))]
                 #current_coord_model.fit()
-                TODO: pick from random agent best move.
+                #TODO: pick from random agent best move.
+                pass
 
             y.append(current_qs)
 

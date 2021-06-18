@@ -1,23 +1,16 @@
 
-from tensorflow.python.keras.utils import losses_utils
-
-from control import Control
-from misc import parse_buildings
-from environment import Environment
-
 from model_misc import *
-from game_misc import *
-from training.DQNAgent import DQNAgent, RandomAgent
+from training.agents.RandomAgent import RandomAgent
 from training_misc import *
-
-
 
 
 if __name__ == '__main__':
 
     environment_data = load_environment_data()
 
-    agent = DQNAgent(discount_factor=0.9, reward_lookahead=5)
+    #agent = DQNAgent(discount_factor=0.9, reward_lookahead=5)
+    agent = RandomAgent(epsilon_greedy=0.1)
+
 
     for game_nr in range(NUM_EPISODES):
         print("\tgame %s" % (game_nr))
@@ -32,7 +25,7 @@ if __name__ == '__main__':
             action = None
             if game_move_nr < NUM_EPISODE_HORIZON_CONTROLLED:
 
-                action = agent.choose_action(extract_state(environment))
+                action = agent.choose_action(environment)
 
                 if action:
                     environment.add_game_event(action)
@@ -47,6 +40,9 @@ if __name__ == '__main__':
 
         agent.end_episode()
         agent.train()
+
+    agent.save()
+    print(agent)
 
 """
 1- Initialize replay memory capacity.
