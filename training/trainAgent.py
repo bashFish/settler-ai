@@ -1,7 +1,11 @@
 
-from model_misc import *
+from training.misc.model_misc import *
 from training.agents.RandomAgent import RandomAgent
-from training_misc import *
+from training.misc.training_misc import *
+
+
+def get_extended_score(environment):
+    return environment.get_score() + np.sum(list(environment.produced_dict.values())) + np.sum(environment.get_owned_terrain())
 
 
 if __name__ == '__main__':
@@ -33,7 +37,7 @@ if __name__ == '__main__':
             if game_move_nr >= NUM_EPISODE_HORIZON_OBSERVED:
                 break
             elif game_move_nr > 1:
-                agent.append_trajectory((environment.get_score(),
+                agent.append_trajectory((get_extended_score(environment),
                                          *last_state_action,
                                          extract_state(environment)))
             last_state_action = [extract_state(environment), action]

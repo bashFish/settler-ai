@@ -6,7 +6,7 @@ import copy
 
 from control import Control
 from environment import Environment
-
+from misc import path_append
 
 ACTION_SPACE = 5
 ENVIRONMENT_DIMENSION = (50, 50)
@@ -16,22 +16,25 @@ TRAIN_MINIBATCH_SIZE = 64
 TRAIN_MIN_REPLAY_MEMORY_SIZE = 100
 TRAIN_MEMORY_SIZE = 1000
 TRAIN_UPDATE_TARGET_STEPS = 25
-NUM_EPISODES = 1000000
+NUM_EPISODES = 100000
 NUM_EPISODE_HORIZON_OBSERVED = 30
 NUM_EPISODE_HORIZON_CONTROLLED = 15
 
 
-
+def get_current_timestring():
+    named_tuple = time.localtime()  # get struct_time
+    time_string = time.strftime("%Y%m%d_%H_%M", named_tuple)
+    return time_string
 
 
 def load_environment_data():
-    with open("ra.pckl", 'rb') as hd:
+    with open(path_append("training/models/ra.pckl"), 'rb') as hd:
         ls_ra = pickle.load(hd)
 
-    with open("occ.pckl" , 'rb') as hd:
+    with open(path_append("training/models/occ.pckl"), 'rb') as hd:
         ls_occ = pickle.load(hd)
 
-    with open("building.pckl" , 'rb') as hd:
+    with open(path_append("training/models/building.pckl"), 'rb') as hd:
         building_pos = pickle.load(hd)
 
     return [ls_ra, ls_occ, building_pos]

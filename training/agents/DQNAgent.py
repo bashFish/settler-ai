@@ -4,12 +4,12 @@ import time
 import numpy as np
 
 from events import GameEvent
-from training.ModifiedTensorBoard import ModifiedTensorBoard
+from training.misc.ModifiedTensorBoard import ModifiedTensorBoard
 from training.agents.Agent import Agent
-from training.game_misc import is_state_dead_end
-from training.model_misc import model_action, model_coordinates, prediction_to_coords, extract_state
+from training.misc.game_misc import is_state_dead_end
+from training.misc.model_misc import model_action, model_coordinates, prediction_to_coords, extract_state
 
-from training.training_misc import NUM_EPISODE_HORIZON_CONTROLLED, TRAIN_MIN_REPLAY_MEMORY_SIZE, TRAIN_MINIBATCH_SIZE, \
+from training.misc.training_misc import NUM_EPISODE_HORIZON_CONTROLLED, TRAIN_MIN_REPLAY_MEMORY_SIZE, TRAIN_MINIBATCH_SIZE, \
     TRAIN_UPDATE_TARGET_STEPS, TRAIN_MODEL_NAME, TRAIN_MEMORY_SIZE
 
 

@@ -5,11 +5,13 @@ from training.agents.Agent import Agent
 import random
 import numpy as np
 
+from training.misc.training_misc import get_current_timestring, NUM_EPISODE_HORIZON_OBSERVED
+
 
 class RandomAgent(Agent):
     def __init__(self, epsilon_greedy = .1):
         super().__init__()
-        self.best_game = None
+        self.best_game = ([None]*NUM_EPISODE_HORIZON_OBSERVED, -99999)
         self.epsilon_greedy = epsilon_greedy
         self.current_action = -1
         self.choosable_keys = self.building_keys + ['-']
@@ -21,7 +23,7 @@ class RandomAgent(Agent):
         self.current_action += 1
         key, cell = None, None
 
-        if random.random() < self.epsilon_greedy or not self.best_game:
+        if random.random() < self.epsilon_greedy:
             key = random.choice(self.choosable_keys)
             if key == '-':
                 return None
@@ -45,7 +47,7 @@ class RandomAgent(Agent):
     def end_episode(self):
         current_score = self.current_episode_trajectories[-1][0]
 
-        if not self.best_game or current_score > self.best_game[1]:
+        if current_score > self.best_game[1]:
             current_game = [c[2] for c in self.current_episode_trajectories]
             self.best_game = (current_game, current_score)
 
@@ -56,7 +58,7 @@ class RandomAgent(Agent):
         pass
 
     def save(self):
-        pickle.dump(self.best_game, open('models/__.pckl', 'wb'))
+        pickle.dump(self.best_game, open('models/random/%s.pckl'%(get_current_timestring()), 'wb'))
 
-    def load(self):
-        pickle.load(open('models/__.pckl'))
+    def load(self, time_string):
+        pickle.load(open('models/random/%s.pckl'%(time_string)))
