@@ -1,4 +1,4 @@
-
+from training.agents.DQNAgent import DQNAgent
 from training.misc.model_misc import *
 from training.agents.RandomAgent import RandomAgent
 from training.misc.training_misc import *
@@ -12,9 +12,12 @@ if __name__ == '__main__':
 
     environment_data = load_environment_data()
 
-    #agent = DQNAgent(discount_factor=0.9, reward_lookahead=5)
-    agent = RandomAgent(epsilon_greedy=0.1)
+    dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=5)
+    random_agent = RandomAgent(epsilon_greedy=0.05)
+    random_agent.load("20210618_17_06")
 
+    agents = [dqn_agent, random_agent]
+    agent = random_agent
 
     for game_nr in range(NUM_EPISODES):
         print("\tgame %s" % (game_nr))

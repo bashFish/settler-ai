@@ -23,8 +23,8 @@ class DQNAgent(Agent):
 
         self.current_action_model = model_action(0.001)
         self.target_action_model = model_action(0.001)
-        self.current_coords_models = [model_coordinates() for i in range(self.building_keys)]
-        self.target_coords_models = [model_coordinates() for i in range(self.building_keys)]
+        self.current_coords_models = [model_coordinates() for i in range(len(self.building_keys))]
+        self.target_coords_models = [model_coordinates() for i in range(len(self.building_keys))]
         self.current_update_counter = 0
 
         self.tensorboard = ModifiedTensorBoard(TRAIN_MODEL_NAME, log_dir="logs/{}-{}".format(TRAIN_MODEL_NAME, int(time.time())))
