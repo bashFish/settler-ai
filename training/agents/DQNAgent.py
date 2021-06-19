@@ -47,7 +47,7 @@ class DQNAgent(Agent):
                     break
                 last_good_index -= 1
 
-            episode_rewards = [0] * len(last_good_index)
+            episode_rewards = [0] * last_good_index
             current_index = last_good_index - 1
             episode_rewards[current_index] = -1
             for _ in range(last_good_index-1):
@@ -80,7 +80,8 @@ class DQNAgent(Agent):
                 return None
         else:
             state = extract_state(environment)
-            action_index = np.argmax(self.current_action_model.predict(self.state_to_model_input(state)))
+            predictions = self.current_action_model.predict(self.state_to_model_input(state))
+            action_index = np.argmax(predictions)
 
             if action_index == 4:
                 return None

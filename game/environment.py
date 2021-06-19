@@ -5,7 +5,7 @@ import numpy as np
 
 from building.actualbuildingfactory import ActualBuildingFactory
 from misc import parse_buildings
-from events import UiEvent
+from events import UiEvent, GameEvent
 
 buildings, _, _ = parse_buildings()
 
@@ -49,6 +49,7 @@ class Environment(object):
         self.settler_score_penalty = 0
 
     def add_game_event(self, event, data=None):
+        assert type(event) is GameEvent
         self._game_events.append((event, data))
 
     def add_ui_event(self, event, data=None):

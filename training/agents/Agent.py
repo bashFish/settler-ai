@@ -35,5 +35,5 @@ class Agent(ABC):
         pass
 
     @abstractmethod
-    def end_episode(self):
+    def end_episode(self, print_trajectory):
         pass

@@ -7,12 +7,12 @@ from training.misc.training_misc import *
 def get_extended_score(environment):
     return environment.get_score() + np.sum(list(environment.produced_dict.values())) + np.sum(environment.get_owned_terrain())
 
-LOAD_MODEL = '20210619_13_03'
-DO_TRAIN = False
+LOAD_MODEL = '' #'20210619_13_03'
+DO_TRAIN = True
 VERBOSE_OUTPUT = 10
 
 epsilon_greedy = .3
-current_num_episodes = NUM_EPISODES
+current_num_episodes = 100000 # NUM_EPISODES
 
 if __name__ == '__main__':
 
@@ -23,12 +23,11 @@ if __name__ == '__main__':
         epsilon_greedy = 0.
         current_num_episodes = 1
 
-    dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=10, epsilon_greedy=epsilon_greedy)
-    #dqn_agent.load('20210619_12_14')
-    #discover_agent = DiscoverAgent(epsilon_greedy=0.15)
+    #dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=10, epsilon_greedy=epsilon_greedy)
+    discover_agent = DiscoverAgent(epsilon_greedy=epsilon_greedy)
 
-    #agents = [dqn_agent, discover_agent]
-    agent = dqn_agent
+    agent = discover_agent
+
     if LOAD_MODEL:
         agent.load(LOAD_MODEL)
 
@@ -48,7 +47,7 @@ if __name__ == '__main__':
                 action = agent.choose_action(environment)
 
                 if action:
-                    environment.add_game_event(action)
+                    environment.add_game_event(*action)
 
             if game_move_nr >= NUM_EPISODE_HORIZON_OBSERVED:
                 break

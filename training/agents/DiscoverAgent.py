@@ -53,7 +53,11 @@ class DiscoverAgent(Agent):
         else:
             return self.best_game[0][self.current_action]
 
-    def end_episode(self):
+    def end_episode(self, print_trajectory):
+        if print_trajectory:
+            print("score: %s"%(self.current_episode_trajectories[-1][0]))
+            print([x[2] for x in self.current_episode_trajectories])
+
         current_score = self.current_episode_trajectories[-1][0]
 
         if current_score > self.best_game[1]:
