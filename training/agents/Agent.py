@@ -13,10 +13,18 @@ class Agent(ABC):
         self.replay_memory = None
 
     def __repr__(self):
-        print("I can speak, too")
+        return "I can speak, too"
 
     def append_trajectory(self, trajectory):
         self.current_episode_trajectories.append(trajectory)
+
+    @abstractmethod
+    def load(self, name):
+        pass
+
+    @abstractmethod
+    def save(self):
+        pass
 
     @abstractmethod
     def choose_action(self, environment):

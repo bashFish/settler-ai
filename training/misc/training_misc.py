@@ -2,11 +2,12 @@ import tensorflow as tf
 import time
 import pickle
 import copy
-
+import numpy as np
 
 from control import Control
 from environment import Environment
 from misc import path_append
+import random
 
 ACTION_SPACE = 5
 ENVIRONMENT_DIMENSION = (50, 50)
@@ -16,10 +17,35 @@ TRAIN_MINIBATCH_SIZE = 64
 TRAIN_MIN_REPLAY_MEMORY_SIZE = 100
 TRAIN_MEMORY_SIZE = 1000
 TRAIN_UPDATE_TARGET_STEPS = 25
-NUM_EPISODES = 100000
+NUM_EPISODES = 1000
 NUM_EPISODE_HORIZON_OBSERVED = 30
 NUM_EPISODE_HORIZON_CONTROLLED = 15
 
+
+def building_condition(key, position, environment):
+    if key == 'w':
+        return environment.findReduceRessource('wood', position, 6, reduce=False)
+    if key == 'k':
+        return len(np.where(environment.reduceArrayToRadius(environment.owned_terrain,
+                                                            position, 3) == 0)) > 0
+
+    return True
+
+def get_pseudo_random_position(environment, key, complete_random_threshold=0.):
+    possible = np.where(environment.get_owned_terrain() == 1)
+    cell = None
+
+    complete_random = random.random()
+    # TODO: take most-favorable position out of 20?
+    for _ in range(20):
+        position = random.randint(0, len(possible[0]) - 1)
+        x, y = possible[0][position], possible[1][position]
+        cell = (x, y)
+
+        if environment.check_coordinates_buildable(cell) and (complete_random < complete_random_threshold or
+                                                              building_condition(key, cell, environment)):
+            break
+    return cell
 
 def get_current_timestring():
     named_tuple = time.localtime()  # get struct_time

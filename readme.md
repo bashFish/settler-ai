@@ -1,4 +1,12 @@
 # TODO
+- icm
+- transformer
+- battling agents
+- iterated score function learning including coord models
+  - alternate action/coord model training, only train, 
+    if other one produced useful predictions 
+
+
 - replay buffer/ target network 
   -> careful with loss etc
   -> need last n states -> encode memory later to do better planning! 

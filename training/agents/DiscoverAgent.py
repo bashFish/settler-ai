@@ -6,46 +6,47 @@ from training.agents.Agent import Agent
 import random
 import numpy as np
 
-from training.misc.training_misc import get_current_timestring, NUM_EPISODE_HORIZON_OBSERVED
+from training.misc.training_misc import get_current_timestring, NUM_EPISODE_HORIZON_OBSERVED, get_pseudo_random_position
 
 
-class RandomAgent(Agent):
-    def __init__(self, epsilon_greedy = .1, move_selection = None):
+class DiscoverAgent(Agent):
+    def __init__(self, epsilon_greedy = .1, move_selection = None, complete_random_threshold = .01):
         super().__init__()
+
+        self.building_list = [['s'], ['w', 'k','-'], ['w', 'k','-'], ['s', 'w', 'k','-']]
+        self.current_built_nr = 0
+
         self.best_game = ([None]*NUM_EPISODE_HORIZON_OBSERVED, -99999)
         self.epsilon_greedy = epsilon_greedy
+        self.complete_random_threshold = complete_random_threshold
         self.current_action = -1
         self.choosable_keys = self.building_keys + ['-']
         if move_selection:
             self.move_selection = move_selection
         else:
-            self.move_selection = self.random_action
+            self.move_selection = self.get_random_action
 
     def __repr__(self):
         return "RandomAgent/ my best move: %s" % (str(self.best_game))
 
-    def random_action(self, environment):
-        key = random.choice(self.choosable_keys)
+    def get_random_action(self, environment):
+        cur_build_pos = self.current_built_nr
+        if self.current_built_nr >= len(self.building_list):
+            cur_build_pos = len(self.building_list)-1
+
+        current_choosable = self.building_list[cur_build_pos]
+        key = random.choice(current_choosable)
         if key == '-':
             return None
 
-        possible = np.where(environment.get_owned_terrain() == 1)
-
-        for _ in range(10):
-            position = random.randint(0, len(possible[0])-1)
-            x, y = possible[0][position], possible[1][position]
-            cell = (x, y)
-
-            if environment.check_coordinates_buildable(cell):
-                break
-
+        cell = get_pseudo_random_position(environment, key, self.complete_random_threshold)
         building = self.key_to_building[key]
 
+        self.current_built_nr += 1
         return (GameEvent.CONSTRUCT_BUILDING, (cell, building))
 
     def choose_action(self, environment):
         self.current_action += 1
-        key, cell = None, None
 
         if random.random() < self.epsilon_greedy:
             return self.move_selection(environment)
@@ -61,6 +62,7 @@ class RandomAgent(Agent):
 
         self.current_episode_trajectories = []
         self.current_action = -1
+        self.current_built_nr = 0
 
     def train(self):
         pass
@@ -69,4 +71,4 @@ class RandomAgent(Agent):
         pickle.dump(self.best_game, open(path_append('training/models/random/%s.pckl'%(get_current_timestring())), 'wb'))
 
     def load(self, time_string):
-        pickle.load(open(path_append('training/models/random/%s.pckl'%(time_string)),'rb'))
+        pickle.load(open(path_append('training/models/random/%s.pckl'%(time_string)), 'rb'))

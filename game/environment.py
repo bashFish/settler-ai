@@ -149,7 +149,7 @@ class Environment(object):
 
         return array[x_start:(coordinate[0]+radius+1), y_start:(coordinate[1]+radius+1)]
 
-    def findReduceRessource(self, ressource, coordinate, radius):
+    def findReduceRessource(self, ressource, coordinate, radius, reduce=True):
         try_radius = [radius]
         if coordinate[0]-radius < 0:
             try_radius.append(coordinate[0])
@@ -160,22 +160,23 @@ class Environment(object):
         if coordinate[1]+radius >= cols:
             try_radius.append(cols-coordinate[1])
         for rad in sorted(set(try_radius)):
-            if self.doFindReduceRessource(ressource, coordinate, rad):
+            if self.doFindReduceRessource(ressource, coordinate, rad, reduce):
                 return True
         return False
 
-    def doFindReduceRessource(self, ressource, coordinate, radius):
+    def doFindReduceRessource(self, ressource, coordinate, radius, reduce=True):
         ressourceid = 8 # wood
         occupation = self.reduceArrayToRadius(self.landscape_occupation, coordinate, radius)
         amount = self.reduceArrayToRadius(self.landscape_resource_amount, coordinate, radius)
         result = np.where(occupation == 8)
         if not len(result[0]):
             return False
-        amount[result[0][0],result[1][0]] -= 1
-        if amount[result[0][0],result[1][0]] == 0:
-            occupation[result[0][0],result[1][0]] = 0
-            #TODO: should this event be thrown here?
-            self.add_ui_event(UiEvent.DELETE_CELL, (coordinate[0]+result[0][0]-(occupation.shape[0]-1)/2,coordinate[1]+result[1][0]-(occupation.shape[1]-1)/2))
+        if reduce:
+            amount[result[0][0],result[1][0]] -= 1
+            if amount[result[0][0],result[1][0]] == 0:
+                occupation[result[0][0],result[1][0]] = 0
+                #TODO: should this event be thrown here?
+                self.add_ui_event(UiEvent.DELETE_CELL, (coordinate[0]+result[0][0]-(occupation.shape[0]-1)/2,coordinate[1]+result[1][0]-(occupation.shape[1]-1)/2))
         return True
 
     def get_num_constructions(self):

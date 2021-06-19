@@ -1,25 +1,38 @@
 from training.agents.DQNAgent import DQNAgent
 from training.misc.model_misc import *
-from training.agents.RandomAgent import RandomAgent
+from training.agents.DiscoverAgent import DiscoverAgent
 from training.misc.training_misc import *
 
 
 def get_extended_score(environment):
     return environment.get_score() + np.sum(list(environment.produced_dict.values())) + np.sum(environment.get_owned_terrain())
 
+LOAD_MODEL = '20210619_13_03'
+DO_TRAIN = False
+VERBOSE_OUTPUT = 10
+
+epsilon_greedy = .3
+current_num_episodes = NUM_EPISODES
 
 if __name__ == '__main__':
 
     environment_data = load_environment_data()
 
-    dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=5)
-    random_agent = RandomAgent(epsilon_greedy=0.05)
-    random_agent.load("20210618_17_06")
 
-    agents = [dqn_agent, random_agent]
-    agent = random_agent
+    if not DO_TRAIN:
+        epsilon_greedy = 0.
+        current_num_episodes = 1
 
-    for game_nr in range(NUM_EPISODES):
+    dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=10, epsilon_greedy=epsilon_greedy)
+    #dqn_agent.load('20210619_12_14')
+    #discover_agent = DiscoverAgent(epsilon_greedy=0.15)
+
+    #agents = [dqn_agent, discover_agent]
+    agent = dqn_agent
+    if LOAD_MODEL:
+        agent.load(LOAD_MODEL)
+
+    for game_nr in range(current_num_episodes):
         print("\tgame %s" % (game_nr))
 
         #TODO: merge control and env?
@@ -45,10 +58,13 @@ if __name__ == '__main__':
                                          extract_state(environment)))
             last_state_action = [extract_state(environment), action]
 
-        agent.end_episode()
-        agent.train()
+        agent.end_episode((game_nr % VERBOSE_OUTPUT) == 0)
 
-    agent.save()
+        if DO_TRAIN:
+            agent.train()
+
+    if DO_TRAIN:
+        agent.save()
     print(agent)
 
 """
