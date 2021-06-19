@@ -3,14 +3,15 @@ import random
 
 import numpy as np
 
-from building.factory import Factory
+from building.actualbuildingfactory import ActualBuildingFactory
 from misc import parse_buildings
-from events import UiEvent
+from events import UiEvent, GameEvent
 
 buildings, _, _ = parse_buildings()
 
 rows = 50
 cols = 50
+
 
 from abc import ABC, abstractmethod
 class Building(ABC):
@@ -18,13 +19,16 @@ class Building(ABC):
     def process_tick(self):
         pass
 
+
 #TODO: evnt queue
 #TODO: wie heisst da paradigma fuer buildingqueue/process tick?
-class State(object):
+class Environment(object):
     def __init__(self):
         #TODO: not best-practice to do io in constructor
-        with open('config/initial_state.json') as fp:
+        with open('../config/initial_state.json') as fp:
             self.state_dict = json.load(fp)
+
+        self.produced_dict = {'wood': 0, 'plank': 0}
 
         self._ui_events = []
         self._game_events = []
@@ -36,21 +40,22 @@ class State(object):
         self.landscape_resource_amount = np.zeros((rows, cols), np.int)
         self.owned_terrain = np.zeros((rows, cols), np.int)
 
-        #TODO: are these state or to be moved to game?
+        #TODO: are these environment or to be moved to game?
         buildings_conf, _, _ = parse_buildings()
-        self._building_factory = Factory(buildings_conf)
+        self._building_factory = ActualBuildingFactory(buildings_conf)
         self.buildings = []
         self.availableCarrier = 0
 
         self.settler_score_penalty = 0
 
     def add_game_event(self, event, data=None):
+        assert type(event) is GameEvent
         self._game_events.append((event, data))
 
     def add_ui_event(self, event, data=None):
-        print("before" + str(data))
+        #print("before" + str(data))
         self._ui_events.append((event, data))
-        print("after")
+        #print("after")
 
     def fetch_reset_ui_events(self):
         if not self._ui_events:
@@ -68,7 +73,7 @@ class State(object):
         self._game_events = []
         return events
 
-    #TODO: should this be in game rather than state?
+    #TODO: should this be in game rather than environment?
     def increment_tick(self):
         self.availableCarrier = self.state_dict['carrier']
         self.tick += 1
@@ -88,13 +93,13 @@ class State(object):
 
     def acquireMaterial(self, material):
         self.state_dict[material] -= 1
-        self.state_dict["consumed_%s"%(material)] += 1
+        #self.state_dict["consumed_%s"%(material)] += 1
         self.availableCarrier -= 1
         return material
 
     def addMaterial(self, material):
         self.state_dict[material] += 1
-        self.state_dict["produced_%s"%(material)] += 1
+        self.produced_dict[material] += 1
         self.availableCarrier -= 1
 
     def check_coordinates_buildable(self, coordinate):
@@ -140,15 +145,12 @@ class State(object):
         self.add_ui_event(UiEvent.DELETE_CELL, cell)
 
     def reduceArrayToRadius(self, array, coordinate, radius):
-        init_x = (coordinate[0]-radius)
-        init_y = (coordinate[1]-radius)
-        if init_x < 0:
-            init_x = 0
-        if init_y < 0:
-            init_y = 0
-        return array[init_x:(coordinate[0]+radius+1),init_y:(coordinate[1]+radius+1)]
+        x_start = max((coordinate[0]-radius),0)
+        y_start = max((coordinate[1]-radius),0)
 
-    def findReduceRessource(self, ressource, coordinate, radius):
+        return array[x_start:(coordinate[0]+radius+1), y_start:(coordinate[1]+radius+1)]
+
+    def findReduceRessource(self, ressource, coordinate, radius, reduce=True):
         try_radius = [radius]
         if coordinate[0]-radius < 0:
             try_radius.append(coordinate[0])
@@ -159,29 +161,34 @@ class State(object):
         if coordinate[1]+radius >= cols:
             try_radius.append(cols-coordinate[1])
         for rad in sorted(set(try_radius)):
-            if self.doFindReduceRessource(ressource, coordinate, rad):
+            if self.doFindReduceRessource(ressource, coordinate, rad, reduce):
                 return True
         return False
 
-    def doFindReduceRessource(self, ressource, coordinate, radius):
+    def doFindReduceRessource(self, ressource, coordinate, radius, reduce=True):
         ressourceid = 8 # wood
         occupation = self.reduceArrayToRadius(self.landscape_occupation, coordinate, radius)
         amount = self.reduceArrayToRadius(self.landscape_resource_amount, coordinate, radius)
         result = np.where(occupation == 8)
         if not len(result[0]):
             return False
-        amount[result[0][0],result[1][0]] -= 1
-        if amount[result[0][0],result[1][0]] == 0:
-            occupation[result[0][0],result[1][0]] = 0
-            #TODO: should this event be thrown here?
-            self.add_ui_event(UiEvent.DELETE_CELL, (coordinate[0]+result[0][0]-(occupation.shape[0]-1)/2,coordinate[1]+result[1][0]-(occupation.shape[1]-1)/2))
+        if reduce:
+            amount[result[0][0],result[1][0]] -= 1
+            if amount[result[0][0],result[1][0]] == 0:
+                occupation[result[0][0],result[1][0]] = 0
+                #TODO: should this event be thrown here?
+                self.add_ui_event(UiEvent.DELETE_CELL, (coordinate[0]+result[0][0]-(occupation.shape[0]-1)/2,coordinate[1]+result[1][0]-(occupation.shape[1]-1)/2))
         return True
 
     def get_num_constructions(self):
         return len([b for b in self.buildings if b.finished == False])
 
+    # cut wood + explore is the objective
+    #TODO: later: drop buildings
+    # +self.state_dict['plank']*10+self.state_dict['wood']*5 #-(self.settler_score_penalty>>1)
+    # cut all wood
     def get_score(self):
-        return np.sum(self.owned_terrain)*3+self.state_dict['produced_plank']*100+self.state_dict['produced_wood']*50-(self.settler_score_penalty>>1)
+        return -np.sum(self.landscape_resource_amount[np.where(self.landscape_occupation == 8)])
 
     # TODO: seems like only proper methods are shareable thru process/manager :/
     def get_ticks(self):

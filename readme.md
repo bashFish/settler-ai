@@ -1,4 +1,58 @@
 # TODO
+- icm
+- transformer
+- battling agents
+- iterated score function learning including coord models
+  - alternate action/coord model training, only train, 
+    if other one produced useful predictions 
+
+
+- replay buffer/ target network 
+  -> careful with loss etc
+  -> need last n states -> encode memory later to do better planning! 
+- annealing of random/ best player moves
+- build proper architecture s.t. new building can be integrated
+  -> split every (sub-) task, do a "model-distributed" normalisation of values s.t. they can be comparable
+  -> only least possible should be retrained
+  -> prioritized experience buffer paper
+- difficulty with similar states -> highlight somehow discrimitive difference?
+reward clipping
+dqn is reactive -> need sth for more reward?
+ deepmind.com/dqn he says more data efficient methods now!!
+- use double dqn afterwards! need sth with long term rewards
+- dueling network architectures for deep rl paper
+- icm for inverse action selection paper
+- exploration : noisy nets for exploration paper 
+- target: good memory network, efficient architecture, auto ml-architecture, extendable
+- attention later for explainability and for focusing decision on what is important  
+- first memory approach: recurrent nets/ transformer
+- warum braucht das netz die kompletten letzten 4 states, und nicht nur die letzten actions + aktuellen state?
+- one bayes network with different priors? + UAI for explaining it
+-> don't just put everything into a number! keep the structure you got!!! primitive discrimiation like ressources/mapping or different actors
+- introduce text driven reasoning/ decision making (just for fun)
+ 
+  HERE IAM state of art Fall 2017!
+  What happened afterwards?
+  
+  
+
+- do Policy iteration
+- curiosity driven reward function
+- replay buffer: prioritize "good samples"/ keep equal distribution of most discriminative data
+
+- BOHB architecture finding
+- memory/ strategy/ planning
+  
+- increase number working ticks for carrier/ woodcutter according to distance
+- add productivity of buildings
+- refactor game code
+- add 'change statistic' e.g. produced wood, buildings etc
+- use lstm/ transformer
+- to gameover or not to gameover
+
+- implement/ find reasoning/explainable network
+- should be refactored/ environment?
+  
 - train 2 network model without old - state (and look at old state)
 - one network per building -> one network for composition -0 LSTM like convergance 
 

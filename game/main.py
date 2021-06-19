@@ -4,33 +4,33 @@ import multiprocessing
 
 from ui import Ui
 from control import Control
-from state import State
+from environment import Environment
 import random
 
 
 random.seed(10)
 
 
-def game_loop(shared_state):
-    g = Control(shared_state)
+def game_loop(shared_environment):
+    g = Control(shared_environment)
     g.mainloop()
 
 
-def ui_loop(shared_state):
-    ui = Ui(shared_state)
+def ui_loop(shared_environment):
+    ui = Ui(shared_environment)
     ui.mainloop()
 
 
 if __name__ == "__main__":
     multiprocessing.set_start_method('spawn')
-    BaseManager.register('State', State)
+    BaseManager.register('Environment', Environment)
     manager = BaseManager()
     manager.start()
-    s = manager.State()
+    environment = manager.Environment()
 
-    gp = Process(target=game_loop, args=(s, ))
+    gp = Process(target=game_loop, args=(environment,))
     gp.start()
-    up = Process(target=ui_loop, args=(s, ))
+    up = Process(target=ui_loop, args=(environment,))
     up.start()
 
     up.join()
