@@ -1,3 +1,4 @@
+import pickle
 from collections import deque
 import random
 import time
@@ -20,7 +21,7 @@ class DQNAgent(Agent):
     def __init__(self, discount_factor, reward_lookahead, epsilon_greedy = .01):
         super().__init__()
 
-        self.choosable_keys = ['s', 'w', 'k','-']
+        self.choosable_keys = ['s', 'w', 'k', '-']
         self.epsilon_greedy = epsilon_greedy
 
         self.replay_memory = deque(maxlen=TRAIN_MEMORY_SIZE)
@@ -31,7 +32,11 @@ class DQNAgent(Agent):
         self.target_action_model = model_action(0.001)
         self.current_update_counter = 0
 
-        self.tensorboard = ModifiedTensorBoard(TRAIN_MODEL_NAME, log_dir="logs/{}-{}".format(TRAIN_MODEL_NAME, int(time.time())))
+        log_dir_name = "logs/{}-{}".format(TRAIN_MODEL_NAME, int(time.time()))
+        self.tensorboard = ModifiedTensorBoard(TRAIN_MODEL_NAME, log_dir=log_dir_name)
+        self.train_summary_writer = tf.summary.create_file_writer(log_dir_name)
+        self.current_episode = 0
+
 
     def end_episode(self, print_trajectory):
         self.replay_memory.extend(get_memory_from_current_episode(self.current_episode_trajectories, self.buildings, self.discount_factor, self.reward_lookahead))
@@ -39,6 +44,7 @@ class DQNAgent(Agent):
             print("score: %s"%(self.current_episode_trajectories[-1][0]))
             print([x[2] for x in self.current_episode_trajectories])
         self.current_episode_trajectories = []
+        self.current_episode += 1
 
     def choose_action(self, environment):
 
@@ -61,10 +67,10 @@ class DQNAgent(Agent):
         return (GameEvent.CONSTRUCT_BUILDING,
                 (self.choose_cell_on_creation_action(environment, key), building))
 
-    def _action_to_index(self, key):
-        if key is None:
+    def _action_to_index(self, action):
+        if action is None:
             return 4
-        return self.building_keys.index(self.buildings[key[1][1]]['key'])
+        return self.building_keys.index(self.buildings[action[1][1]]['key'])
 
     def choose_cell_on_creation_action(self, environment, building_key):
         #current_coord_model = self.current_coords_models[self.building_keys.index(building_key)]
@@ -94,6 +100,9 @@ class DQNAgent(Agent):
         current_states = self.state_list_to_model_input(minibatch, 0)
         current_qs_list = self.current_action_model.predict(current_states)
 
+        with self.train_summary_writer.as_default():
+            tf.summary.histogram('predictions', current_qs_list, step=self.current_episode)
+
         next_current_states = self.state_list_to_model_input(minibatch, 2)
         future_qs_list = self.target_action_model.predict(next_current_states)
 
@@ -121,6 +130,7 @@ class DQNAgent(Agent):
     def save(self):
         current_timestamp = get_current_timestring()
         self.target_action_model.save(path_append('training/models/dqn/%s'%(current_timestamp)))
+        pickle.dump(self.replay_memory, open(path_append('training/models/dqn/%s_replay_memory.pckl'%(get_current_timestring())), 'wb'))
         print("saved %s"%(current_timestamp))
 
     def load(self, time_string):

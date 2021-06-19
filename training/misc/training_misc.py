@@ -16,11 +16,11 @@ ENVIRONMENT_DIMENSION = (50, 50)
 TRAIN_MODEL_NAME = 'first_shot'
 TRAIN_MINIBATCH_SIZE = 64
 TRAIN_MIN_REPLAY_MEMORY_SIZE = 100
-TRAIN_MEMORY_SIZE = 50000
-TRAIN_UPDATE_TARGET_STEPS = 25
+TRAIN_MEMORY_SIZE = 200000
+TRAIN_UPDATE_TARGET_STEPS = 50
 NUM_EPISODES = 1000
-NUM_EPISODE_HORIZON_OBSERVED = 30
-NUM_EPISODE_HORIZON_CONTROLLED = 15
+NUM_EPISODE_HORIZON_OBSERVED = 50
+NUM_EPISODE_HORIZON_CONTROLLED = 25
 
 
 def get_memory_from_current_episode(current_episode_trajectories, buildings, discount_factor, reward_lookahead):
@@ -35,15 +35,18 @@ def get_memory_from_current_episode(current_episode_trajectories, buildings, dis
                 break
             last_good_index -= 1
 
-        episode_rewards = [0] * last_good_index
-        current_index = last_good_index - 1
-        episode_rewards[current_index] = -1
+        episode_rewards = [0] * (last_good_index)
+        current_index = last_good_index-1
+        episode_rewards[current_index] = -10
+        return [list(current_episode_trajectories[current_index][1:]) + [episode_rewards[current_index], 0]]
+        """
         for _ in range(last_good_index - 1):
             current_index -= 1
-            episode_rewards[current_index] = episode_rewards[current_index + 1] * discount_factor
+            #episode_rewards[current_index] = episode_rewards[current_index + 1] * discount_factor
 
         return [list(current_episode_trajectories[i][1:]) + [episode_rewards[i], 0] for i in
                 range(last_good_index)]
+        """
 
     # 2nd case: bellmann equation:
     resultset = []

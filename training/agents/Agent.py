@@ -1,7 +1,7 @@
-
+import pickle
 from abc import ABC, abstractmethod
 
-from misc import parse_buildings
+from misc import parse_buildings, path_append
 
 
 class Agent(ABC):
@@ -37,3 +37,6 @@ class Agent(ABC):
     @abstractmethod
     def end_episode(self, print_trajectory):
         pass
+
+    def load_replay_memory(self, path):
+        self.replay_memory.extend(pickle.load(open(path_append(path), 'rb')))

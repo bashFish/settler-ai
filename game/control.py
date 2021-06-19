@@ -26,14 +26,14 @@ class Control:
             if e == GameEvent.CONSTRUCT_BUILDING:
                 #TODO: should be called each tick with do_construct()
                 cell, building = d
-                print("Building: %s" % (repr(d)))
+                #print("Building: %s" % (repr(d)))
                 result = self.environment.construct_building(cell, building)
                 if result:
                     self.environment.add_ui_event(UiEvent.ADD_BUILDING, (cell, "Construction"))
             if e == GameEvent._ADD_BUILDING:
                 #TODO: should be called each tick with tick()
                 cell, building = d
-                print("Building: %s" % (repr(d)))
+                print("Building added: %s %s" % (repr(d), self.environment.tick))
                 result = self.environment.do_add_building(cell, building)
                 if result:
                     self.environment.add_ui_event(UiEvent.ADD_BUILDING, (cell, building))

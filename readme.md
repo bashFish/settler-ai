@@ -1,4 +1,8 @@
 # TODO
+- check  training of dqn
+- check verlauf von predictions tensorboard
+- log von loss scheint kaputt
+  
 - icm
 - transformer
 - battling agents

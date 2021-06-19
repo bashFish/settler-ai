@@ -5,14 +5,14 @@ from training.misc.training_misc import *
 
 
 def get_extended_score(environment):
-    return environment.get_score() + np.sum(list(environment.produced_dict.values())) + np.sum(environment.get_owned_terrain())
+    return environment.get_score() + np.sum(list(environment.produced_dict.values()))*5 + np.sum(environment.get_owned_terrain())/5
 
 LOAD_MODEL = '' #'20210619_13_03'
 DO_TRAIN = True
 VERBOSE_OUTPUT = 10
 
-epsilon_greedy = .2
-current_num_episodes = 60000 # NUM_EPISODES
+epsilon_greedy = .15
+current_num_episodes = 1000*1000 # NUM_EPISODES
 
 if __name__ == '__main__':
 
@@ -23,8 +23,9 @@ if __name__ == '__main__':
         epsilon_greedy = 0.
         current_num_episodes = 1
 
-    #dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=10, epsilon_greedy=epsilon_greedy)
-    discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=10, epsilon_greedy=epsilon_greedy)
+    #dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
+    #dqn_agent.load_replay_memory('training/models/random/20210619_14_20_replay_memory.pckl')
+    discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
 
     agent = discover_agent
 
