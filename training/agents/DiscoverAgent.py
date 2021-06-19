@@ -1,4 +1,5 @@
 import pickle
+from collections import deque
 
 from events import GameEvent
 from misc import path_append
@@ -6,18 +7,22 @@ from training.agents.Agent import Agent
 import random
 import numpy as np
 
-from training.misc.training_misc import get_current_timestring, NUM_EPISODE_HORIZON_OBSERVED, get_pseudo_random_position
+from training.misc.training_misc import get_current_timestring, NUM_EPISODE_HORIZON_OBSERVED, \
+    get_pseudo_random_position, TRAIN_MEMORY_SIZE, get_memory_from_current_episode
 
 
 class DiscoverAgent(Agent):
-    def __init__(self, epsilon_greedy = .1, move_selection = None, complete_random_threshold = .01):
+    def __init__(self, discount_factor=0.9, reward_lookahead=10, epsilon_greedy = .1, move_selection = None, complete_random_threshold = .01):
         super().__init__()
 
         self.building_list = [['s'], ['w', 'k','-'], ['w', 'k','-'], ['s', 'w', 'k','-']]
         self.current_built_nr = 0
 
+        self.replay_memory = deque(maxlen=TRAIN_MEMORY_SIZE)
         self.best_game = ([None]*NUM_EPISODE_HORIZON_OBSERVED, -99999)
         self.epsilon_greedy = epsilon_greedy
+        self.discount_factor = discount_factor
+        self.reward_lookahead = reward_lookahead
         self.complete_random_threshold = complete_random_threshold
         self.current_action = -1
         self.choosable_keys = self.building_keys + ['-']
@@ -58,6 +63,9 @@ class DiscoverAgent(Agent):
             print("score: %s"%(self.current_episode_trajectories[-1][0]))
             print([x[2] for x in self.current_episode_trajectories])
 
+        self.replay_memory.extend(get_memory_from_current_episode(self.current_episode_trajectories, self.buildings,
+                                                                  self.discount_factor, self.reward_lookahead))
+
         current_score = self.current_episode_trajectories[-1][0]
 
         if current_score > self.best_game[1]:
@@ -73,6 +81,7 @@ class DiscoverAgent(Agent):
 
     def save(self):
         pickle.dump(self.best_game, open(path_append('training/models/random/%s.pckl'%(get_current_timestring())), 'wb'))
+        pickle.dump(self.replay_memory, open(path_append('training/models/random/%s_replay_memory.pckl'%(get_current_timestring())), 'wb'))
 
     def load(self, time_string):
         pickle.load(open(path_append('training/models/random/%s.pckl'%(time_string)), 'rb'))

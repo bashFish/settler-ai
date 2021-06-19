@@ -8,6 +8,7 @@ from control import Control
 from environment import Environment
 from misc import path_append
 import random
+from training.misc.game_misc import is_state_dead_end
 
 ACTION_SPACE = 5
 ENVIRONMENT_DIMENSION = (50, 50)
@@ -15,11 +16,43 @@ ENVIRONMENT_DIMENSION = (50, 50)
 TRAIN_MODEL_NAME = 'first_shot'
 TRAIN_MINIBATCH_SIZE = 64
 TRAIN_MIN_REPLAY_MEMORY_SIZE = 100
-TRAIN_MEMORY_SIZE = 1000
+TRAIN_MEMORY_SIZE = 50000
 TRAIN_UPDATE_TARGET_STEPS = 25
 NUM_EPISODES = 1000
 NUM_EPISODE_HORIZON_OBSERVED = 30
 NUM_EPISODE_HORIZON_CONTROLLED = 15
+
+
+def get_memory_from_current_episode(current_episode_trajectories, buildings, discount_factor, reward_lookahead):
+    # computes reward from score (or dead end)
+    # returns [[ state action nextstate reward ]_i for i]
+
+    # 1st case: dead end -> rate entire X steps from trajectory with discount 'as bad'
+    if is_state_dead_end(current_episode_trajectories[-1][1], buildings):
+        last_good_index = len(current_episode_trajectories) - 2
+        while last_good_index > 0:
+            if not is_state_dead_end(current_episode_trajectories[last_good_index][1], buildings):
+                break
+            last_good_index -= 1
+
+        episode_rewards = [0] * last_good_index
+        current_index = last_good_index - 1
+        episode_rewards[current_index] = -1
+        for _ in range(last_good_index - 1):
+            current_index -= 1
+            episode_rewards[current_index] = episode_rewards[current_index + 1] * discount_factor
+
+        return [list(current_episode_trajectories[i][1:]) + [episode_rewards[i], 0] for i in
+                range(last_good_index)]
+
+    # 2nd case: bellmann equation:
+    resultset = []
+    for i in range(NUM_EPISODE_HORIZON_CONTROLLED):
+        resultset.append(list(current_episode_trajectories[i][1:]) +
+                         [sum([(current_episode_trajectories[1 + j + i][0] -
+                                current_episode_trajectories[j + i][0]) * discount_factor ** j for j in
+                               range(reward_lookahead)]), 1])
+    return resultset
 
 
 def building_condition(key, position, environment):

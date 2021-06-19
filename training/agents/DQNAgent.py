@@ -8,12 +8,12 @@ from events import GameEvent
 from misc import path_append
 from training.misc.ModifiedTensorBoard import ModifiedTensorBoard
 from training.agents.Agent import Agent
-from training.misc.game_misc import is_state_dead_end
 from training.misc.model_misc import model_action, extract_state
 
 from training.misc.training_misc import NUM_EPISODE_HORIZON_CONTROLLED, TRAIN_MIN_REPLAY_MEMORY_SIZE, \
     TRAIN_MINIBATCH_SIZE, \
-    TRAIN_UPDATE_TARGET_STEPS, TRAIN_MODEL_NAME, TRAIN_MEMORY_SIZE, get_pseudo_random_position, get_current_timestring
+    TRAIN_UPDATE_TARGET_STEPS, TRAIN_MODEL_NAME, TRAIN_MEMORY_SIZE, get_pseudo_random_position, get_current_timestring, \
+    get_memory_from_current_episode
 
 
 class DQNAgent(Agent):
@@ -33,40 +33,8 @@ class DQNAgent(Agent):
 
         self.tensorboard = ModifiedTensorBoard(TRAIN_MODEL_NAME, log_dir="logs/{}-{}".format(TRAIN_MODEL_NAME, int(time.time())))
 
-
-    #TODO: later don't take entire episode but only recent X moves + Y sampled moves from before
-    def get_memory_from_current_episode(self):
-        #computes reward from score (or dead end)
-        # returns [[ state action nextstate reward ]_i for i]
-
-        # 1st case: dead end -> rate entire X steps from trajectory with discount 'as bad'
-        if is_state_dead_end(self.current_episode_trajectories[-1][1], self.buildings):
-            last_good_index = len(self.current_episode_trajectories) - 2
-            while last_good_index > 0:
-                if not is_state_dead_end(self.current_episode_trajectories[last_good_index][1], self.buildings):
-                    break
-                last_good_index -= 1
-
-            episode_rewards = [0] * last_good_index
-            current_index = last_good_index - 1
-            episode_rewards[current_index] = -1
-            for _ in range(last_good_index-1):
-                current_index -= 1
-                episode_rewards[current_index] = episode_rewards[current_index+1]*self.discount_factor
-
-            return [list(self.current_episode_trajectories[i][1:])+[episode_rewards[i], 0] for i in range(last_good_index)]
-
-        # 2nd case: bellmann equation:
-        resultset = []
-        for i in range(NUM_EPISODE_HORIZON_CONTROLLED):
-            resultset.append(list(self.current_episode_trajectories[i][1:]) +
-                [sum([(self.current_episode_trajectories[1+j+i][0]-self.current_episode_trajectories[j+i][0])*self.discount_factor**j for j in range(self.reward_lookahead)]), 1])
-        return resultset
-
-
     def end_episode(self, print_trajectory):
-        resultset = self.get_memory_from_current_episode()
-        self.replay_memory.extend(resultset)
+        self.replay_memory.extend(get_memory_from_current_episode(self.current_episode_trajectories, self.buildings, self.discount_factor, self.reward_lookahead))
         if print_trajectory:
             print("score: %s"%(self.current_episode_trajectories[-1][0]))
             print([x[2] for x in self.current_episode_trajectories])
@@ -126,7 +94,7 @@ class DQNAgent(Agent):
         current_states = self.state_list_to_model_input(minibatch, 0)
         current_qs_list = self.current_action_model.predict(current_states)
 
-        next_current_states =  self.state_list_to_model_input(minibatch, 2)
+        next_current_states = self.state_list_to_model_input(minibatch, 2)
         future_qs_list = self.target_action_model.predict(next_current_states)
 
         #TODO: clip rewards

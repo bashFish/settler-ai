@@ -11,8 +11,8 @@ LOAD_MODEL = '' #'20210619_13_03'
 DO_TRAIN = True
 VERBOSE_OUTPUT = 10
 
-epsilon_greedy = .3
-current_num_episodes = 100000 # NUM_EPISODES
+epsilon_greedy = .2
+current_num_episodes = 60000 # NUM_EPISODES
 
 if __name__ == '__main__':
 
@@ -24,7 +24,7 @@ if __name__ == '__main__':
         current_num_episodes = 1
 
     #dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=10, epsilon_greedy=epsilon_greedy)
-    discover_agent = DiscoverAgent(epsilon_greedy=epsilon_greedy)
+    discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=10, epsilon_greedy=epsilon_greedy)
 
     agent = discover_agent
 
@@ -62,9 +62,10 @@ if __name__ == '__main__':
         if DO_TRAIN:
             agent.train()
 
+    print(agent)
+
     if DO_TRAIN:
         agent.save()
-    print(agent)
 
 """
 1- Initialize replay memory capacity.
