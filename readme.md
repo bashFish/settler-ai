@@ -1,5 +1,6 @@
 # TODO
 - check  training of dqn
+- adjust score: cutting wood from distane = more score!
 - check verlauf von predictions tensorboard
 - log von loss scheint kaputt
   

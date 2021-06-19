@@ -28,14 +28,16 @@ class DQNAgent(Agent):
         self.discount_factor = discount_factor
         self.reward_lookahead = reward_lookahead
 
-        self.current_action_model = model_action(0.001)
-        self.target_action_model = model_action(0.001)
+        self.current_action_model = model_action(0.01)
+        self.target_action_model = model_action(0)
         self.current_update_counter = 0
 
         log_dir_name = "logs/{}-{}".format(TRAIN_MODEL_NAME, int(time.time()))
         self.tensorboard = ModifiedTensorBoard(TRAIN_MODEL_NAME, log_dir=log_dir_name)
-        self.train_summary_writer = tf.summary.create_file_writer(log_dir_name)
         self.current_episode = 0
+        self.current_move = -1
+
+        self.move_distribution = [[0]*len(self.choosable_keys)]*NUM_EPISODE_HORIZON_CONTROLLED
 
 
     def end_episode(self, print_trajectory):
@@ -45,8 +47,15 @@ class DQNAgent(Agent):
             print([x[2] for x in self.current_episode_trajectories])
         self.current_episode_trajectories = []
         self.current_episode += 1
+        self.current_move = -1
+
+        with self.tensorboard.writer.as_default():
+            for i in range(NUM_EPISODE_HORIZON_CONTROLLED):
+                tf.summary.histogram('prediction_move_%s'%(i), self.move_distribution[i], step=self.current_episode)
+        self.move_distribution = [[0]*len(self.choosable_keys)]*NUM_EPISODE_HORIZON_CONTROLLED
 
     def choose_action(self, environment):
+        self.current_move += 1
 
         if random.random() < self.epsilon_greedy:
             key = random.choice(self.choosable_keys)
@@ -56,11 +65,12 @@ class DQNAgent(Agent):
             state = extract_state(environment)
             predictions = self.current_action_model.predict(self.state_to_model_input(state))
             action_index = np.argmax(predictions)
+            self.move_distribution[self.current_move] = predictions
 
-            if action_index == 4:
+            if action_index == 3:
                 return None
 
-            key = self.building_keys[action_index]
+            key = self.choosable_keys[action_index]
 
         building = self.key_to_building[key]
 
@@ -69,8 +79,8 @@ class DQNAgent(Agent):
 
     def _action_to_index(self, action):
         if action is None:
-            return 4
-        return self.building_keys.index(self.buildings[action[1][1]]['key'])
+            return 3
+        return self.choosable_keys.index(self.buildings[action[1][1]]['key'])
 
     def choose_cell_on_creation_action(self, environment, building_key):
         #current_coord_model = self.current_coords_models[self.building_keys.index(building_key)]
@@ -99,9 +109,6 @@ class DQNAgent(Agent):
 
         current_states = self.state_list_to_model_input(minibatch, 0)
         current_qs_list = self.current_action_model.predict(current_states)
-
-        with self.train_summary_writer.as_default():
-            tf.summary.histogram('predictions', current_qs_list, step=self.current_episode)
 
         next_current_states = self.state_list_to_model_input(minibatch, 2)
         future_qs_list = self.target_action_model.predict(next_current_states)
@@ -134,4 +141,5 @@ class DQNAgent(Agent):
         print("saved %s"%(current_timestamp))
 
     def load(self, time_string):
+        self.current_action_model = tf.keras.models.load_model(path_append('training/models/dqn/%s'%(time_string)))
         self.target_action_model = tf.keras.models.load_model(path_append('training/models/dqn/%s'%(time_string)))

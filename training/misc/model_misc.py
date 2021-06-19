@@ -41,10 +41,11 @@ def model_action(learning_rate):
     model = tf.keras.layers.Dense(50, activation='relu')(model)
 
     #TODO: remove should be handled somewhat different
-    model = tf.keras.layers.Dense(5, activation='linear', #TODO: not linear - what did i have before?
-        kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
-        bias_regularizer=tf.keras.regularizers.l2(1e-4),
-        activity_regularizer=tf.keras.regularizers.l1(1e-3))(model)
+    model = tf.keras.layers.Dense(4, activation='linear',
+        #kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
+        #bias_regularizer=tf.keras.regularizers.l2(1e-4),
+        #activity_regularizer=tf.keras.regularizers.l1(1e-3)
+                                  )(model)
 
     model = tf.keras.Model(inputs=[x.input, y.input], outputs=model)
     #TODO: loss should be should be RSM rather? but i also train somewhat different here

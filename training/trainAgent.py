@@ -12,7 +12,7 @@ DO_TRAIN = True
 VERBOSE_OUTPUT = 10
 
 epsilon_greedy = .15
-current_num_episodes = 1000*1000 # NUM_EPISODES
+current_num_episodes = 1000*100 # NUM_EPISODES
 
 if __name__ == '__main__':
 
@@ -23,11 +23,11 @@ if __name__ == '__main__':
         epsilon_greedy = 0.
         current_num_episodes = 1
 
-    #dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
-    #dqn_agent.load_replay_memory('training/models/random/20210619_14_20_replay_memory.pckl')
-    discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
+    dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
+    dqn_agent.load_replay_memory('training/models/random/20210619_16_33_replay_memory.pckl')
+    #discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
 
-    agent = discover_agent
+    agent = dqn_agent #discover_agent
 
     if LOAD_MODEL:
         agent.load(LOAD_MODEL)
