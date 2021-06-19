@@ -105,7 +105,7 @@ class Ui:
         self.window = Tk()
         self.window.title("Settler-UI")
 
-        self.canvas = Canvas(self.window, width=size_of_board+200, height=size_of_board)
+        self.canvas = Canvas(self.window, width=size_of_board+300, height=size_of_board)
         self.canvas.pack()
 
         self.window.bind("<Key>", self.key_input)

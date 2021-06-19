@@ -144,13 +144,10 @@ class Environment(object):
         self.add_ui_event(UiEvent.DELETE_CELL, cell)
 
     def reduceArrayToRadius(self, array, coordinate, radius):
-        init_x = (coordinate[0]-radius)
-        init_y = (coordinate[1]-radius)
-        if init_x < 0:
-            init_x = 0
-        if init_y < 0:
-            init_y = 0
-        return array[init_x:(coordinate[0]+radius+1),init_y:(coordinate[1]+radius+1)]
+        x_start = max((coordinate[0]-radius),0)
+        y_start = max((coordinate[1]-radius),0)
+
+        return array[x_start:(coordinate[0]+radius+1), y_start:(coordinate[1]+radius+1)]
 
     def findReduceRessource(self, ressource, coordinate, radius):
         try_radius = [radius]
