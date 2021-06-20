@@ -31,6 +31,7 @@ class DiscoverAgent(Agent):
         else:
             self.move_selection = self.get_random_action
         self.top_10_games = [(-99999, [None]*NUM_EPISODE_HORIZON_CONTROLLED)]
+        self.picked_game = self.top_10_games[0]
 
     def __repr__(self):
         return "RandomAgent/ my best games: %s" % (str(self.top_10_games))
@@ -51,14 +52,13 @@ class DiscoverAgent(Agent):
         self.current_built_nr += 1
         return (GameEvent.CONSTRUCT_BUILDING, (cell, building))
 
-    def choose_action(self, environment):
+    def choose_action(self, environment, inhibit_random = False):
         self.current_action += 1
 
-        if random.random() < self.epsilon_greedy:
+        if not inhibit_random and random.random() < self.epsilon_greedy:
             return self.move_selection(environment)
         else:
-            picked_game = random.choice(self.top_10_games)
-            return picked_game[1][self.current_action]
+            return self.picked_game[1][self.current_action]
 
     def update_top_10_games(self):
 
@@ -68,7 +68,7 @@ class DiscoverAgent(Agent):
             top_10_moves = [c[1] for c in self.top_10_games]
             current_moves = [c[2] for c in self.current_episode_trajectories]
             if current_moves in top_10_moves:
-                ind = top_10_moves.index()
+                ind = top_10_moves.index(current_moves)
                 if ind > 0:
                     del self.top_10_games[ind]
         elif current_score > max([c[0] for c in self.top_10_games]):
@@ -92,11 +92,15 @@ class DiscoverAgent(Agent):
         self.current_action = -1
         self.current_built_nr = 0
 
+        self.picked_game = random.choice(self.top_10_games)
+
     def train(self):
         pass
 
-    def save(self):
-        pickle.dump(self.top_10_games, open(path_append('training/models/random/%s.pckl'%(get_current_timestring())), 'wb'))
+    def save(self, not_used=''):
+        current_timestring = get_current_timestring()
+        print("model number %s" %(current_timestring))
+        pickle.dump(self.top_10_games, open(path_append('training/models/random/%s.pckl'%(current_timestring)), 'wb'))
         pickle.dump(self.replay_memory, open(path_append('training/models/random/%s_replay_memory.pckl'%(get_current_timestring())), 'wb'))
 
     def load(self, time_string):

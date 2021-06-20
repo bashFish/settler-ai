@@ -5,7 +5,7 @@ from training.misc.training_misc import *
 
 
 def get_extended_score(environment):
-    return environment.get_score() + np.sum(list(environment.produced_dict.values()))*5 + np.sum(environment.get_owned_terrain())/5
+    return 150 + environment.get_score() + np.sum(list(environment.produced_dict.values()))*5 + np.sum(environment.get_owned_terrain())/5
 
 LOAD_MODEL = '' #'20210619_13_03'
 DO_TRAIN = True
@@ -14,20 +14,24 @@ VERBOSE_OUTPUT = 10
 epsilon_greedy = .15
 current_num_episodes = 1000*100 # NUM_EPISODES
 
+#TODO: save each 1k steps
+#   print each 10 epochs a "real" trajectory without epsilon
+
 if __name__ == '__main__':
 
     environment_data = load_environment_data()
-
 
     if not DO_TRAIN:
         epsilon_greedy = 0.
         current_num_episodes = 1
 
-    dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
-    dqn_agent.load_replay_memory('training/models/random/20210619_16_33_replay_memory.pckl')
-    #discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
+    #dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
+    #dqn_agent.load_replay_memory('training/models/random/20210619_22_21_replay_memory.pckl')
+    #agent = dqn_agent
 
-    agent = dqn_agent #discover_agent
+    discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
+    agent = discover_agent
+
 
     if LOAD_MODEL:
         agent.load(LOAD_MODEL)
@@ -45,7 +49,7 @@ if __name__ == '__main__':
             action = None
             if game_move_nr < NUM_EPISODE_HORIZON_CONTROLLED:
 
-                action = agent.choose_action(environment)
+                action = agent.choose_action(environment, (game_nr % VERBOSE_OUTPUT) == 0)
 
                 if action:
                     environment.add_game_event(*action)
@@ -62,6 +66,8 @@ if __name__ == '__main__':
 
         if DO_TRAIN:
             agent.train()
+            if game_nr % 100000 == 999:
+                agent.save(game_nr)
 
     print(agent)
 

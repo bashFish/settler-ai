@@ -28,7 +28,7 @@ class DQNAgent(Agent):
         self.discount_factor = discount_factor
         self.reward_lookahead = reward_lookahead
 
-        self.current_action_model = model_action(0.01)
+        self.current_action_model = model_action(0.0001)
         self.target_action_model = model_action(0)
         self.current_update_counter = 0
 
@@ -54,10 +54,10 @@ class DQNAgent(Agent):
                 tf.summary.histogram('prediction_move_%s'%(i), self.move_distribution[i], step=self.current_episode)
         self.move_distribution = [[0]*len(self.choosable_keys)]*NUM_EPISODE_HORIZON_CONTROLLED
 
-    def choose_action(self, environment):
+    def choose_action(self, environment, inhibit_random = False):
         self.current_move += 1
 
-        if random.random() < self.epsilon_greedy:
+        if not inhibit_random and random.random() < self.epsilon_greedy:
             key = random.choice(self.choosable_keys)
             if key == '-':
                 return None
@@ -122,7 +122,7 @@ class DQNAgent(Agent):
                 reward += self.discount_factor * max_future_q
 
             current_qs = current_qs_list[index]
-            current_qs[self._action_to_index(action)] = reward
+            current_qs[self._action_to_index(action)] = reward/10.
 
             y.append(current_qs)
 
@@ -134,11 +134,11 @@ class DQNAgent(Agent):
             self.target_action_model.set_weights(self.current_action_model.get_weights())
             self.current_update_counter = 0
 
-    def save(self):
-        current_timestamp = get_current_timestring()
-        self.target_action_model.save(path_append('training/models/dqn/%s'%(current_timestamp)))
+    def save(self, suffix = ''):
+        model_name = "%s_%s"%(get_current_timestring(),suffix)
+        self.target_action_model.save(path_append('training/models/dqn/%s'%(model_name)))
         pickle.dump(self.replay_memory, open(path_append('training/models/dqn/%s_replay_memory.pckl'%(get_current_timestring())), 'wb'))
-        print("saved %s"%(current_timestamp))
+        print("saved %s"%(model_name))
 
     def load(self, time_string):
         self.current_action_model = tf.keras.models.load_model(path_append('training/models/dqn/%s'%(time_string)))
