@@ -98,7 +98,7 @@ class DQNAgent(Agent):
                 'statistic_state': np.vstack([t['statistic_state'] for t in tmp])}
 
     def state_to_model_input(self, state):
-        return {'map_state': state[0],
+        return {'map_state': np.array([state[0]]),
                 'statistic_state': np.array([list(state[1].values()) + list(state[2:])])}
 
     def train(self):
