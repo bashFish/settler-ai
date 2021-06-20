@@ -9,6 +9,7 @@ def get_extended_score(environment):
 
 LOAD_MODEL = '' #'20210619_13_03'
 DO_TRAIN = True
+DO_SAVE_MODEL = False
 VERBOSE_OUTPUT = 10
 
 epsilon_greedy = .15
@@ -25,12 +26,13 @@ if __name__ == '__main__':
         epsilon_greedy = 0.
         current_num_episodes = 1
 
-    #dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
-    #dqn_agent.load_replay_memory('training/models/random/20210619_22_21_replay_memory.pckl')
-    #agent = dqn_agent
+    dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
+    dqn_agent.load_replay_memory('training/models/random/20210620_12_03_replay_memory.pckl')
+    agent = dqn_agent
+    DO_SAVE_MODEL = True
 
-    discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
-    agent = discover_agent
+    #discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
+    #agent = discover_agent
 
 
     if LOAD_MODEL:
@@ -66,7 +68,7 @@ if __name__ == '__main__':
 
         if DO_TRAIN:
             agent.train()
-            if game_nr % 100000 == 999:
+            if DO_SAVE_MODEL and game_nr % 1000 == 999:
                 agent.save(game_nr)
 
     print(agent)

@@ -93,7 +93,7 @@ class DQNAgent(Agent):
         return possible[0][position], possible[1][position]
 
     def state_list_to_model_input(self, state_list, index):
-        tmp = [self.state_to_model_input(trajectory[index]) for trajectory in state_list]
+        tmp = [self.state_to_model_input(state[index]) for state in state_list]
         return {'map_state': np.vstack([t['map_state'] for t in tmp]),
                 'statistic_state': np.vstack([t['statistic_state'] for t in tmp])}
 

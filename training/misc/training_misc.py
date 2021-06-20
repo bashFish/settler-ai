@@ -48,16 +48,15 @@ def get_memory_from_current_episode(current_episode_trajectories, buildings, dis
                 range(last_good_index)]
         """
 
+    #TODO: habs hier verkackt
     resultset = []
     # 2nd case: bellmann equation:
     #TODO: should only give proper reward here (?)
     #resultset = [list(current_episode_trajectories[-1][1:]) + [current_episode_trajectories[-1][0], 1]]
     for i in range(NUM_EPISODE_HORIZON_CONTROLLED-1):
-        resultset.append([list(current_episode_trajectories[i][1:]) +
-                         [0, 1]])
+        resultset.append(list(current_episode_trajectories[i][1:]) + [0, 1])
 
-    resultset.append([list(current_episode_trajectories[NUM_EPISODE_HORIZON_CONTROLLED-1][1:]) +
-                      [current_episode_trajectories[-1][0], 1]])
+    resultset.append(list(current_episode_trajectories[NUM_EPISODE_HORIZON_CONTROLLED-1][1:]) + [current_episode_trajectories[-1][0], 1])
     return resultset
 
 
