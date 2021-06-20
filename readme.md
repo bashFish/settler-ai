@@ -1,6 +1,11 @@
 # TODO
-- check get_memory_from_current_episode -50 penality - is it at the right position?
-- 
+- another split of networks:
+  - explicit do/nothing + buildings + positions (one for each building) ?
+  - next step: one for each building
+  - agents fuer strategie, die kollaborativ entscheiden was zu tun
+    - eine ki fuer rohstoffe, eine fuer militaer, decision making 
+    - einen (paar) schritt in die zukunft simulieren/ projective simulation
+
 - check  training of dqn
 - adjust score: cutting wood from distane = more score!
 - check verlauf von predictions tensorboard

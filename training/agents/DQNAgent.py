@@ -28,7 +28,7 @@ class DQNAgent(Agent):
         self.discount_factor = discount_factor
         self.reward_lookahead = reward_lookahead
 
-        self.current_action_model = model_action(0.001)
+        self.current_action_model = model_action(0.01)
         self.target_action_model = model_action(0)
         self.current_update_counter = 0
 
@@ -98,7 +98,7 @@ class DQNAgent(Agent):
                 'statistic_state': np.vstack([t['statistic_state'] for t in tmp])}
 
     def state_to_model_input(self, state):
-        return {'map_state': np.stack([state[0]]),
+        return {'map_state': state[0],
                 'statistic_state': np.array([list(state[1].values()) + list(state[2:])])}
 
     def train(self):
