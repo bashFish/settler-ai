@@ -72,14 +72,6 @@
 # - "more planks" -> "need sawmill, but also more wood"
 # - detect areas on map to be used eventually, eg with wood etc
 
-"""
-def prediction_to_coords(preds):
-    coords = preds*10
-    cell = (int(min(round(abs(coords[0]), -1) / 10, 49)), int(min(round(abs(coords[1]), -1) / 10, 49)))
-    return cell
-"""
-
-
 
 #TODO: construction needs to be more clear
 # # # # -> currently it can be forgotten what building is being constructed (?)
@@ -90,37 +82,3 @@ def state_representation(state):
     # TODO: include demand on carrier and wood/sawmill
     # TODO: later include productivity of buildings
     # TODO: later include history of states/ lstm?
-
-
-
-class RandomAgent(Agent):
-
-    def __init__(self, construct_probability):
-        super().__init__()
-
-        self.episode_trajectories = PriorityQueue(maxlen=50)
-        self.construct_probability = construct_probability
-
-    def choose_action(self, state):
-
-        action_category = random.random()
-        action = None
-
-        """ TODO: no delete yet
-        if action_category < .05 and False: 
-            b = random.choice(environment.buildings)
-            action = (GameEvent.DROP, (b.coordinate))
-        """
-
-        if action_category > self.construct_probability:
-            key = random.choice(self.building_keys)
-
-            available_positions = np.stack(np.where(state.get_owned_terrain() == 1)).transpose()
-            while True:
-                coordinates = random.choice(available_positions)
-                if state.check_coordinates_buildable(coordinates):
-                    break
-
-            action = (GameEvent.CONSTRUCT_BUILDING, (coordinates, self.key_to_building[key]))
-
-        return action

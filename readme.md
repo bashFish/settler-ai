@@ -1,4 +1,6 @@
 # TODO
+- check get_memory_from_current_episode -50 penality - is it at the right position?
+- 
 - check  training of dqn
 - adjust score: cutting wood from distane = more score!
 - check verlauf von predictions tensorboard

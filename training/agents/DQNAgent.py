@@ -28,7 +28,7 @@ class DQNAgent(Agent):
         self.discount_factor = discount_factor
         self.reward_lookahead = reward_lookahead
 
-        self.current_action_model = model_action(0.0001)
+        self.current_action_model = model_action(0.001)
         self.target_action_model = model_action(0)
         self.current_update_counter = 0
 
@@ -113,7 +113,11 @@ class DQNAgent(Agent):
         next_current_states = self.state_list_to_model_input(minibatch, 2)
         future_qs_list = self.target_action_model.predict(next_current_states)
 
-        #TODO: clip rewards
+        #TODO: clip rewards ?
+        # Bellman equation used:
+        #   Q' = target, Q = current
+        #   s r a s'
+        #   Q(s) = r + \gamma * Q'(s')
         y = []
         for index, (current_state, action, new_current_state, reward, flexible_reward) in enumerate(minibatch):
 

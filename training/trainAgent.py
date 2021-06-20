@@ -26,14 +26,13 @@ if __name__ == '__main__':
         epsilon_greedy = 0.
         current_num_episodes = 1
 
-    dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
-    dqn_agent.load_replay_memory('training/models/random/20210620_12_03_replay_memory.pckl')
-    agent = dqn_agent
-    DO_SAVE_MODEL = True
+    #dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
+    #dqn_agent.load_replay_memory('training/models/random/20210620_12_03_replay_memory.pckl')
+    #agent = dqn_agent
+    #DO_SAVE_MODEL = True
 
-    #discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
-    #agent = discover_agent
-
+    discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
+    agent = discover_agent
 
     if LOAD_MODEL:
         agent.load(LOAD_MODEL)
