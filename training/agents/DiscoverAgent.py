@@ -97,11 +97,11 @@ class DiscoverAgent(Agent):
     def train(self):
         pass
 
-    def save(self, not_used=''):
-        current_timestring = get_current_timestring()
-        print("model number %s" %(current_timestring))
-        pickle.dump(self.top_10_games, open(path_append('training/models/random/%s.pckl'%(current_timestring)), 'wb'))
-        pickle.dump(self.replay_memory, open(path_append('training/models/random/%s_replay_memory.pckl'%(get_current_timestring())), 'wb'))
+    def save(self, suffix=''):
+        model_name = "%s_%s"%(get_current_timestring(),suffix)
+        print("model number %s" %(model_name))
+        pickle.dump(self.top_10_games, open(path_append('training/models/random/%s.pckl'%(model_name)), 'wb'))
+        pickle.dump(self.replay_memory, open(path_append('training/models/random/%s_replay_memory.pckl'%(model_name)), 'wb'))
 
     def load(self, time_string):
         pickle.load(open(path_append('training/models/random/%s.pckl'%(time_string)), 'rb'))

@@ -1,43 +1,19 @@
-from training.agents.DQNAgent import DQNAgent
 from training.misc.model_misc import *
-from training.agents.DiscoverAgent import DiscoverAgent
 from training.misc.training_misc import *
+
+
+VERBOSE_OUTPUT = 10
 
 
 def get_extended_score(environment):
     return 150 + environment.get_score() + np.sum(list(environment.produced_dict.values()))*5 + np.sum(environment.get_owned_terrain())/5
 
-LOAD_MODEL = '' #'20210619_13_03'
-DO_TRAIN = True
-DO_SAVE_MODEL = False
-VERBOSE_OUTPUT = 10
 
-epsilon_greedy = .15
-current_num_episodes = 1000*100 # NUM_EPISODES
-
-#TODO: save each 1k steps
-#   print each 10 epochs a "real" trajectory without epsilon
-
-if __name__ == '__main__':
+def train_loop(agent, num_episodes, savepoint_steps = 0):
 
     environment_data = load_environment_data()
 
-    if not DO_TRAIN:
-        epsilon_greedy = 0.
-        current_num_episodes = 1
-
-    #dqn_agent = DQNAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
-    #dqn_agent.load_replay_memory('training/models/random/20210620_12_03_replay_memory.pckl')
-    #agent = dqn_agent
-    #DO_SAVE_MODEL = True
-
-    discover_agent = DiscoverAgent(discount_factor=0.9, reward_lookahead=1, epsilon_greedy=epsilon_greedy)
-    agent = discover_agent
-
-    if LOAD_MODEL:
-        agent.load(LOAD_MODEL)
-
-    for game_nr in range(current_num_episodes):
+    for game_nr in range(num_episodes):
         print("\tgame %s" % (game_nr))
 
         #TODO: merge control and env?
@@ -65,15 +41,13 @@ if __name__ == '__main__':
 
         agent.end_episode((game_nr % VERBOSE_OUTPUT) == 0)
 
-        if DO_TRAIN:
-            agent.train()
-            if DO_SAVE_MODEL and game_nr % 1000 == 999:
-                agent.save(game_nr)
+        agent.train()
+        if savepoint_steps and game_nr % savepoint_steps == (savepoint_steps-1):
+            agent.save(game_nr)
 
     print(agent)
 
-    if DO_TRAIN:
-        agent.save()
+    agent.save(game_nr)
 
 """
 1- Initialize replay memory capacity.
