@@ -83,8 +83,10 @@ class DiscoverAgent(Agent):
             print("score: %s"%(self.current_episode_trajectories[-1][0]))
             print([x[2] for x in self.current_episode_trajectories])
 
-        self.replay_memory.extend(get_memory_from_current_episode(self.current_episode_trajectories, self.buildings,
-                                                                  self.discount_factor, self.reward_lookahead))
+        print([c[2] for c in self.current_episode_trajectories])
+        new_memory = get_memory_from_current_episode(self.current_episode_trajectories, self.buildings,
+                                                                  self.discount_factor, self.reward_lookahead)
+        self.replay_memory.extend(new_memory)
 
         self.update_top_10_games()
 

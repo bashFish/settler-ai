@@ -33,7 +33,7 @@ class Control:
             if e == GameEvent._ADD_BUILDING:
                 #TODO: should be called each tick with tick()
                 cell, building = d
-                print("Building added: %s %s" % (repr(d), self.environment.tick))
+                #print("Building added: %s %s" % (repr(d), self.environment.tick))
                 result = self.environment.do_add_building(cell, building)
                 if result:
                     self.environment.add_ui_event(UiEvent.ADD_BUILDING, (cell, building))

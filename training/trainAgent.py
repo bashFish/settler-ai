@@ -6,7 +6,10 @@ VERBOSE_OUTPUT = 10
 
 
 def get_extended_score(environment):
-    return 150 + environment.get_score() + np.sum(list(environment.produced_dict.values()))*5 + np.sum(environment.get_owned_terrain())/5
+    #if sum([1 for b in environment.buildings if b.finished is False]):
+    #    return -50
+    #return 190 + environment.get_score() + np.sum(list(environment.produced_dict.values()))*5 + np.sum(environment.get_owned_terrain())/5
+    return 5*np.sum(list(environment.produced_dict.values())) #-2*sum([1 for b in environment.buildings if b.finished is False])
 
 
 def train_loop(agent, num_episodes, savepoint_steps = 0):
@@ -23,21 +26,22 @@ def train_loop(agent, num_episodes, savepoint_steps = 0):
         for _ in control.yieldloop():
             game_move_nr += 1
 
-            action = None
-            if game_move_nr < NUM_EPISODE_HORIZON_CONTROLLED:
+            if game_move_nr %2 == 1:
+                action = None
+                if game_move_nr < 2*NUM_EPISODE_HORIZON_CONTROLLED:
 
-                action = agent.choose_action(environment, (game_nr % VERBOSE_OUTPUT) == 0)
+                    action = agent.choose_action(environment, (game_nr % VERBOSE_OUTPUT) == 0)
 
-                if action:
-                    environment.add_game_event(*action)
+                    if action:
+                        environment.add_game_event(*action)
 
-            if game_move_nr >= NUM_EPISODE_HORIZON_OBSERVED:
-                break
-            elif game_move_nr > 1:
-                agent.append_trajectory((get_extended_score(environment),
-                                         *last_state_action,
-                                         extract_state(environment)))
-            last_state_action = [extract_state(environment), action]
+                if game_move_nr >= 2*NUM_EPISODE_HORIZON_OBSERVED:
+                    break
+                elif game_move_nr > 1:
+                    agent.append_trajectory((get_extended_score(environment),
+                                             *last_state_action,
+                                             extract_state(environment)))
+                last_state_action = [extract_state(environment), action]
 
         agent.end_episode((game_nr % VERBOSE_OUTPUT) == 0)
 

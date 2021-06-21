@@ -1,0 +1,8 @@
+experiments:
+- 08858: reward/10, lr 0.01, rmsprop
+- 19330:        5            adam
+- 21251:        3       0.001 rmsprop
+----
+score funktion hoch damit penalty von -50 in deadend mehr gewicht hat
+no recorded memory taken
+----

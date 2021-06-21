@@ -14,9 +14,9 @@ ACTION_SPACE = 5
 ENVIRONMENT_DIMENSION = (50, 50)
 
 TRAIN_MODEL_NAME = 'first_shot'
-TRAIN_MINIBATCH_SIZE = 64
+TRAIN_MINIBATCH_SIZE = 24
 TRAIN_MIN_REPLAY_MEMORY_SIZE = 100
-TRAIN_MEMORY_SIZE = 100000
+TRAIN_MEMORY_SIZE = 10000
 TRAIN_UPDATE_TARGET_STEPS = 50
 NUM_EPISODES = 1000
 NUM_EPISODE_HORIZON_OBSERVED = 50
@@ -35,16 +35,24 @@ def get_memory_from_current_episode(current_episode_trajectories, buildings, dis
                 break
             last_good_index -= 1
 
-        episode_rewards = [0] * (last_good_index)
-        current_index = last_good_index-1
-        episode_rewards[current_index] = -50
-        return [list(current_episode_trajectories[current_index][1:]) + [episode_rewards[current_index], 0]]
+        resultset = []
+        for i in range(last_good_index):
+            current_reward = 0
+            if not current_episode_trajectories[i][2]:
+                current_reward -= .1
+            resultset.append(list(current_episode_trajectories[i][1:]) + [current_reward, 0])
+        resultset.append(list(current_episode_trajectories[last_good_index][1:]) + [-5, 1])
+
+        return resultset
 
     resultset = []
     for i in range(NUM_EPISODE_HORIZON_CONTROLLED-1):
-        resultset.append(list(current_episode_trajectories[i][1:]) + [0, 1])
+            current_reward = 0
+            if not current_episode_trajectories[i][2]:
+                current_reward -= .1
+            resultset.append(list(current_episode_trajectories[i][1:]) + [current_reward, 0])
 
-    resultset.append(list(current_episode_trajectories[NUM_EPISODE_HORIZON_CONTROLLED-1][1:]) + [current_episode_trajectories[-1][0], 1])
+    resultset.append(list(current_episode_trajectories[NUM_EPISODE_HORIZON_CONTROLLED-1][1:]) + [current_episode_trajectories[-1][0], 0])
     return resultset
 
 

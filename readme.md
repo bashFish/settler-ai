@@ -1,4 +1,8 @@
 # TODO
+- TODO: check state/next state none + reward.
+  - it is heavily oversampled in distribution
+- TODO: score function nur +1 bei holz gehackt, -1 bei gamover? 
+- todo: experimente mit parameter vor ausfuehrung kopieren speichern
 - another split of networks:
   - explicit do/nothing + buildings + positions (one for each building) ?
   - next step: one for each building

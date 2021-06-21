@@ -15,6 +15,7 @@ from training.misc.training_misc import NUM_EPISODE_HORIZON_CONTROLLED, TRAIN_MI
     TRAIN_MINIBATCH_SIZE, \
     TRAIN_UPDATE_TARGET_STEPS, TRAIN_MODEL_NAME, TRAIN_MEMORY_SIZE, get_pseudo_random_position, get_current_timestring, \
     get_memory_from_current_episode
+from training.trainAgent import get_extended_score
 
 
 class DQNAgent(Agent):
@@ -28,7 +29,7 @@ class DQNAgent(Agent):
         self.discount_factor = discount_factor
         self.reward_lookahead = reward_lookahead
 
-        self.current_action_model = model_action(0.01)
+        self.current_action_model = model_action(0.001)
         self.target_action_model = model_action(0)
         self.current_update_counter = 0
 
@@ -43,7 +44,7 @@ class DQNAgent(Agent):
     def end_episode(self, print_trajectory):
         self.replay_memory.extend(get_memory_from_current_episode(self.current_episode_trajectories, self.buildings, self.discount_factor, self.reward_lookahead))
         if print_trajectory:
-            print("score: %s"%(self.current_episode_trajectories[-1][0]))
+            print("score: %s "%(self.current_episode_trajectories[-1][0]))
             print([x[2] for x in self.current_episode_trajectories])
         self.current_episode_trajectories = []
         self.current_episode += 1
@@ -59,6 +60,7 @@ class DQNAgent(Agent):
 
         if not inhibit_random and random.random() < self.epsilon_greedy:
             key = random.choice(self.choosable_keys)
+            #print("random/%s"%(key))
             if key == '-':
                 return None
         else:
@@ -67,6 +69,7 @@ class DQNAgent(Agent):
             action_index = np.argmax(predictions)
             self.move_distribution[self.current_move] = predictions
 
+            #print("chosen/%s"%(action_index))
             if action_index == 3:
                 return None
 
@@ -126,7 +129,7 @@ class DQNAgent(Agent):
                 reward += self.discount_factor * max_future_q
 
             current_qs = current_qs_list[index]
-            current_qs[self._action_to_index(action)] = reward/10.
+            current_qs[self._action_to_index(action)] = reward
 
             y.append(current_qs)
 
