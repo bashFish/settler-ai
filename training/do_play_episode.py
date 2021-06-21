@@ -3,7 +3,7 @@ import numpy as np
 from training.misc.training_misc import instanciate_environment, load_environment_data
 from training.trainAgent import get_extended_score
 
-episode = [( ((24, 19), 'Woodcutter')), ( ((32, 20), 'Woodcutter')), ( ((22, 18), 'Woodcutter')), ( ((30, 21), 'Woodcutter')), ( ((25, 20), 'Woodcutter')), ( ((19, 19), 'Woodcutter')), ( ((30, 18), 'Woodcutter')), ( ((22, 22), 'Woodcutter')), ( ((18, 21), 'Woodcutter')), ( ((25, 19), 'Woodcutter')), ( ((20, 22), 'Woodcutter')), ( ((23, 20), 'Woodcutter')), ( ((26, 20), 'Woodcutter')), ( ((22, 21), 'Woodcutter')), ( ((28, 20), 'Woodcutter')), ( ((23, 18), 'Woodcutter')), ( ((29, 20), 'Woodcutter')), ( ((28, 18), 'Woodcutter')), ( ((26, 18), 'Woodcutter')), ( ((26, 19), 'Woodcutter')), ( ((27, 21), 'Woodcutter')), ( ((32, 18), 'Woodcutter')), ( ((25, 21), 'Woodcutter')), ( ((32, 21), 'Woodcutter')), ( ((28, 22), 'Woodcutter')), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+episode = [( ((22, 19), 'Barack')), ( ((21, 25), 'Barack')), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
 
 if __name__ == '__main__':
 

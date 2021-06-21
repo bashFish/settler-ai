@@ -14,10 +14,10 @@ ACTION_SPACE = 5
 ENVIRONMENT_DIMENSION = (50, 50)
 
 TRAIN_MODEL_NAME = 'first_shot'
-TRAIN_MINIBATCH_SIZE = 24
-TRAIN_MIN_REPLAY_MEMORY_SIZE = 100
-TRAIN_MEMORY_SIZE = 10000
-TRAIN_UPDATE_TARGET_STEPS = 50
+TRAIN_MINIBATCH_SIZE = 80
+TRAIN_MIN_REPLAY_MEMORY_SIZE = 200
+TRAIN_MEMORY_SIZE = 100000
+TRAIN_UPDATE_TARGET_STEPS = 100
 NUM_EPISODES = 1000
 NUM_EPISODE_HORIZON_OBSERVED = 50
 NUM_EPISODE_HORIZON_CONTROLLED = 25
@@ -28,31 +28,30 @@ def get_memory_from_current_episode(current_episode_trajectories, buildings, dis
     # returns [[ state action nextstate reward ]_i for i]
 
     # 1st case: dead end -> rate entire X steps from trajectory with discount 'as bad'
+    final_reward = [current_episode_trajectories[-1][0], 0]
+    last_good_index = NUM_EPISODE_HORIZON_CONTROLLED
+
     if is_state_dead_end(current_episode_trajectories[-1][1], buildings):
-        last_good_index = len(current_episode_trajectories) - 2
+        last_good_index = NUM_EPISODE_HORIZON_CONTROLLED + 5
         while last_good_index > 0:
             if not is_state_dead_end(current_episode_trajectories[last_good_index][1], buildings):
                 break
             last_good_index -= 1
 
-        resultset = []
-        for i in range(last_good_index):
-            current_reward = 0
-            if not current_episode_trajectories[i][2]:
-                current_reward -= .1
-            resultset.append(list(current_episode_trajectories[i][1:]) + [current_reward, 0])
-        resultset.append(list(current_episode_trajectories[last_good_index][1:]) + [-5, 1])
+        while last_good_index < NUM_EPISODE_HORIZON_CONTROLLED-1 and current_episode_trajectories[last_good_index][2] is None:
+            last_good_index += 1
 
-        return resultset
+        last_good_index += 2
+        final_reward = [-25, 1]
 
     resultset = []
-    for i in range(NUM_EPISODE_HORIZON_CONTROLLED-1):
-            current_reward = 0
-            if not current_episode_trajectories[i][2]:
-                current_reward -= .1
-            resultset.append(list(current_episode_trajectories[i][1:]) + [current_reward, 0])
+    for i in range(last_good_index):
+        current_reward = 0
+        if not current_episode_trajectories[i][2]:
+            current_reward -= .5
+        resultset.append(list(current_episode_trajectories[i][1:]) + [current_reward, 0])
+    resultset.append(list(current_episode_trajectories[last_good_index][1:]) + final_reward)
 
-    resultset.append(list(current_episode_trajectories[NUM_EPISODE_HORIZON_CONTROLLED-1][1:]) + [current_episode_trajectories[-1][0], 0])
     return resultset
 
 
