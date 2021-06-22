@@ -29,7 +29,7 @@ def get_memory_from_current_episode(current_episode_trajectories, buildings, dis
 
     # 1st case: dead end -> rate entire X steps from trajectory with discount 'as bad'
     final_reward = [current_episode_trajectories[-1][0], 1]
-    last_good_index = NUM_EPISODE_HORIZON_CONTROLLED
+    last_good_index = NUM_EPISODE_HORIZON_CONTROLLED-1
 
     if is_state_dead_end(current_episode_trajectories[-1][1], buildings):
         """
@@ -49,8 +49,8 @@ def get_memory_from_current_episode(current_episode_trajectories, buildings, dis
     resultset = []
     for i in range(last_good_index):
         current_reward = 0 #TODO: set to #produced goods?
-        #if not current_episode_trajectories[i][2]:
-        #    current_reward -= .1
+        if not current_episode_trajectories[i][2]:
+            current_reward -= .1
         resultset.append(list(current_episode_trajectories[i][1:]) + [current_reward, 1])
     resultset.append(list(current_episode_trajectories[last_good_index][1:]) + final_reward)
 

@@ -47,8 +47,9 @@ class DQNAgent(Agent):
         if print_trajectory:
             print("score: %s "%(self.current_episode_trajectories[-1][0]))
             print([x[2] for x in self.current_episode_trajectories])
-            current_qs_list = self.target_action_model.predict(self.state_list_to_model_input(memory_episode[:5], 0))
-            print(current_qs_list)
+            current_qs_list = self.current_action_model.predict(self.state_list_to_model_input(memory_episode[:5], 0))
+            target_qs_list = self.target_action_model.predict(self.state_list_to_model_input(memory_episode[:5], 0))
+            print(current_qs_list, "\n", target_qs_list)
         self.current_episode_trajectories = []
         self.current_episode += 1
         self.current_move = -1

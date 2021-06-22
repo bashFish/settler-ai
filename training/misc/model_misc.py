@@ -61,8 +61,8 @@ def model_action(learning_rate):
 
     model = tf.keras.Model(inputs=statistic_input, outputs=model)
     #TODO: loss should be should be RSM rather? but i also train somewhat different here
-    model.compile(loss=tf.keras.losses.Huber(), optimizer=Adam(lr=learning_rate), metrics=['accuracy'])
-    #model.compile(loss=tf.keras.losses.Huber(), optimizer=RMSprop(lr=learning_rate), metrics=['accuracy'])
+    #model.compile(loss=tf.keras.losses.Huber(), optimizer=Adam(lr=learning_rate), metrics=['accuracy'])
+    model.compile(loss=tf.keras.losses.Huber(), optimizer=RMSprop(lr=learning_rate), metrics=['accuracy'])
     return model
 
 
