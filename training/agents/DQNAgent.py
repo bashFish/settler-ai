@@ -29,7 +29,7 @@ class DQNAgent(Agent):
         self.discount_factor = discount_factor
         self.reward_lookahead = reward_lookahead
 
-        self.current_action_model = model_action(0.0001)
+        self.current_action_model = model_action(0.001)
         self.target_action_model = model_action(0)
         self.current_update_counter = 0
 
@@ -138,7 +138,7 @@ class DQNAgent(Agent):
             y.append(current_qs)
 
         self.current_action_model.fit(current_states, np.array(y), batch_size=TRAIN_MINIBATCH_SIZE,
-                       verbose=0, shuffle=False, callbacks=[self.tensorboard])
+                       verbose=1, shuffle=False, callbacks=[self.tensorboard])
 
         self.current_update_counter += 1
         if self.current_update_counter > TRAIN_UPDATE_TARGET_STEPS:

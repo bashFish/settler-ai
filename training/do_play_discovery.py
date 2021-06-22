@@ -13,6 +13,9 @@ episode = [( ((27, 19), 'Woodcutter')), ( ((25, 20), 'Woodcutter')), ( ((28, 21)
 episode = [( ((20, 20), 'Sawmill')), None, None, ( ((32, 23), 'Sawmill')), None, None, None, ( ((25, 18), 'Sawmill')), None, None, None, None, None, None, None, None, None, ( ((30, 30), 'Barack')), ( ((23, 24), 'Sawmill')), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
 episode = [( ((29, 22), 'Woodcutter')), ( ((18, 18), 'Woodcutter')), ( ((25, 22), 'Woodcutter')), ( ((31, 19), 'Woodcutter')), ( ((21, 20), 'Woodcutter')), ( ((32, 21), 'Woodcutter')), ( ((28, 19), 'Woodcutter')), ( ((22, 20), 'Woodcutter')), ( ((20, 20), 'Woodcutter')), ( ((20, 19), 'Woodcutter')), ( ((20, 18), 'Woodcutter')), ( ((29, 18), 'Woodcutter')), ( ((25, 18), 'Woodcutter')), ( ((30, 21), 'Woodcutter')), ( ((26, 20), 'Woodcutter')), ( ((22, 22), 'Woodcutter')), ( ((23, 19), 'Woodcutter')), ( ((26, 18), 'Woodcutter')), ( ((32, 18), 'Woodcutter')), ( ((22, 21), 'Woodcutter')), ( ((29, 19), 'Woodcutter')), ( ((30, 22), 'Woodcutter')), ( ((21, 18), 'Woodcutter')), ( ((31, 21), 'Woodcutter')), ( ((20, 22), 'Woodcutter')), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
 episode = [( ((29, 22), 'Woodcutter'))] + [None]*10
+episode = [( ((19, 26), 'Sawmill')), None, None, None, ( ((25, 22), 'Woodcutter')), ( ((30, 28), 'Barack')), ( ((27, 19), 'Woodcutter')), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+
+
 
 environment_data = load_environment_data()
 # TODO: merge control and env?
