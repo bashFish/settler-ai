@@ -128,6 +128,7 @@ class DQNAgent(Agent):
         y = []
         for index, (current_state, action, new_current_state, reward, flexible_reward) in enumerate(minibatch):
 
+            reward /= 100 # prevents divergence, currently -50 is error state reward, total reward on good trajectory could be 200
             if flexible_reward:
                 max_future_q = np.max(future_qs_list[index])
                 reward += self.discount_factor * max_future_q

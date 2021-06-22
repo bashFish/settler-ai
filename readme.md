@@ -1,7 +1,7 @@
 # TODO
-- TODO: check state/next state none + reward.
-  - it is heavily oversampled in distribution
-- TODO: score function nur +1 bei holz gehackt, -1 bei gamover? 
+
+- copy all code per experiment
+
 - todo: experimente mit parameter vor ausfuehrung kopieren speichern
 - another split of networks:
   - explicit do/nothing + buildings + positions (one for each building) ?
@@ -122,3 +122,17 @@ trains ai
 - do a hidden state for own reasoning
 - learn one-time associations : placing a cutter -> gets associated with nearest wood once. 
 - placing storehouse -> all get re-associated with nearest.
+
+## DQN
+- distribution epsilon greedy might be shitty?
+- TODO: score function nur +1 bei holz gehackt, -1 bei gamover? 
+- speedup wenn ich jeden state ordentlich reward (produced) geben wuerde!
+- diverging scores -> reward scaling/ clipping?
+- remodel into agent vs agent game -> just +1 for more score
+
+
+# interesting findings:
+## DQN 
+- can't continue training - just doesnt produce meaningful new gradients.
+- building a consumable score function was aweful! every hint just became a trap 
+- got diverging scores now -> adjust reward, learning rate, discount factor
