@@ -1,0 +1,15 @@
+22.6. 15:05
+
+DQN: finally got it right. after 2k games, it can (almost) build the best first 10 moves
+
+[(<GameEvent.CONSTRUCT_BUILDING: 2>, ((28, 29), 'Sawmill')), None, None, None, (<GameEvent.CONSTRUCT_BUILDING: 2>, ((22, 20), 'Woodcutter')), (<GameEvent.CONSTRUCT_BUILDING: 2>, ((30, 21), 'Woodcutter')), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+[[1.7053597  1.0920347  0.98589194 1.5440711 ]
+ [1.379065   1.3187199  1.4117165  3.152345  ]
+ [1.9823706  1.955113   1.8049877  4.09019   ]
+ [2.622465   2.4414034  2.0406258  4.4875298 ]
+ [1.7825575  5.3060684  4.0746017  4.74598   ]] 
+ [[1.6312919  1.0631025  0.97268116 1.4807291 ]
+ [1.2228956  1.0987868  1.2329954  2.5383496 ]
+ [1.8133109  1.7562737  1.6464466  3.5876846 ]
+ [2.819293   2.7076058  2.207342   4.8793874 ]
+ [1.6152792  4.9473386  4.10507    4.5945845 ]]
