@@ -15,10 +15,10 @@ def extract_state(environment):
              environment.owned_terrain)]).transpose(),
             copy.deepcopy(environment.state_dict),
             sum([1 for b in environment.buildings if b.finished is False]),
-            sum([1 for b in environment.buildings if b.finished is True and b == Sawmill]),
-            sum([1 for b in environment.buildings if b.finished is True and b == Woodcutter]),
-            sum([1 for b in environment.buildings if b.finished is False and b == Sawmill]),
-            sum([1 for b in environment.buildings if b.finished is False and b == Woodcutter]),
+            sum([1 for b in environment.buildings if b.finished is True and type(b) == Sawmill]),
+            sum([1 for b in environment.buildings if b.finished is True and type(b) == Woodcutter]),
+            sum([1 for b in environment.buildings if b.finished is False and type(b) == Sawmill]),
+            sum([1 for b in environment.buildings if b.finished is False and type(b) == Woodcutter]),
             )
 
 def model_action(learning_rate):
@@ -62,7 +62,7 @@ def model_action(learning_rate):
     model = tf.keras.Model(inputs=statistic_input, outputs=model)
     #TODO: loss should be should be RSM rather? but i also train somewhat different here
     model.compile(loss=tf.keras.losses.Huber(), optimizer=Adam(lr=learning_rate), metrics=['accuracy'])
-    #model.compile(loss="mse", optimizer=RMSprop(lr=learning_rate), metrics=['accuracy'])
+    #model.compile(loss=tf.keras.losses.Huber(), optimizer=RMSprop(lr=learning_rate), metrics=['accuracy'])
     return model
 
 

@@ -29,7 +29,7 @@ class DQNAgent(Agent):
         self.discount_factor = discount_factor
         self.reward_lookahead = reward_lookahead
 
-        self.current_action_model = model_action(0.001)
+        self.current_action_model = model_action(0.0001)
         self.target_action_model = model_action(0)
         self.current_update_counter = 0
 
@@ -42,10 +42,13 @@ class DQNAgent(Agent):
 
 
     def end_episode(self, print_trajectory):
-        self.replay_memory.extend(get_memory_from_current_episode(self.current_episode_trajectories, self.buildings, self.discount_factor, self.reward_lookahead))
+        memory_episode = get_memory_from_current_episode(self.current_episode_trajectories, self.buildings, self.discount_factor, self.reward_lookahead)
+        self.replay_memory.extend(memory_episode)
         if print_trajectory:
             print("score: %s "%(self.current_episode_trajectories[-1][0]))
             print([x[2] for x in self.current_episode_trajectories])
+            current_qs_list = self.target_action_model.predict(self.state_list_to_model_input(memory_episode[:5], 0))
+            print(current_qs_list)
         self.current_episode_trajectories = []
         self.current_episode += 1
         self.current_move = -1
