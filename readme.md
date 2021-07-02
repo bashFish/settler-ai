@@ -1,5 +1,9 @@
 # TODO
 
+https://scikit-optimize.github.io/stable/modules/generated/skopt.gp_minimize.html
+
+https://scikit-optimize.github.io/stable/auto_examples/strategy-comparison.html#sphx-glr-auto-examples-strategy-comparison-py
+
 - copy all code per experiment
 
 for strategy planning:
@@ -11,6 +15,10 @@ R-CNN/ YOLO/ Selective Search:
 3. Use the generated regions to produce the final candidate region proposals 
 
 
+- META-REINFORCEMENT LEARNING
+http://ai.stanford.edu/blog/meta-exploration/
+  https://github.com/ezliu/dream
+  
 - todo: experimente mit parameter vor ausfuehrung kopieren speichern
 - another split of networks:
   - explicit do/nothing + buildings + positions (one for each building) ?
@@ -24,7 +32,7 @@ R-CNN/ YOLO/ Selective Search:
 - check verlauf von predictions tensorboard
 - log von loss scheint kaputt
   
-- icm
+- ICM, SERENE
 - transformer
 - battling agents
 - iterated score function learning including coord models
