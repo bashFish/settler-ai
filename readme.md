@@ -2,6 +2,15 @@
 
 - copy all code per experiment
 
+for strategy planning:
+- let network  propose N solutions, trajectories, then do search on them  
+
+R-CNN/ YOLO/ Selective Search:
+1. Generate initial sub-segmentation, we generate many candidate     regions
+2. Use greedy algorithm to recursively combine similar regions into larger ones 
+3. Use the generated regions to produce the final candidate region proposals 
+
+
 - todo: experimente mit parameter vor ausfuehrung kopieren speichern
 - another split of networks:
   - explicit do/nothing + buildings + positions (one for each building) ?
